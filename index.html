@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap MKT — Costa Brava / TMC Brasil 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cb-coral:#E05C2A; --cb-coral-d:#C44E20; --cb-coral-l:#FBE8DF;
+  --cb-navy:#0F2037; --cb-navy-mid:#1C3450; --cb-navy-light:#243B55;
+  --cb-sand:#F5EFE6; --cb-paper:#FFFFFF;
+  --cb-gold:#F59E0B; --cb-gold-l:#FEF3C7;
+  --cb-teal:#0B7A8A; --cb-teal-l:#E0F5F7;
+  --cb-ink:#1A1714; --cb-ink2:#4A4540; --cb-ink3:#8A837C;
+  --cb-rule:#E8E3DC; --cb-rule2:#D6D0C8;
+  --corp:#1A3C6E; --corp-l:#EBF0F8;
+  --live:#B45309; --live-l:#FDF3E3;
+  --you:#6B3FA0; --you-l:#F3EEF9;
+  --endo:#166534; --endo-l:#DCFCE7;
+  --cs:#0B7A8A;   --cs-l:#E0F5F7;
+  --tech:#374151; --tech-l:#F3F4F6;
+  --geral:#7C3AED;--geral-l:#EDE9FE;
+  --ph1:#DC2626; --ph2:#D97706; --ph3:#16A34A; --ph4:#2563EB;
+  --topbar-h:52px; --filter-h:44px; --header-h:44px;
+  --names-w:290px; --row-h:36px; --group-h:30px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Epilogue',sans-serif;background:var(--cb-sand);color:var(--cb-ink);font-size:13px;}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.topbar{height:var(--topbar-h);background:var(--cb-navy);display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px;flex-shrink:0;z-index:40;border-bottom:2px solid var(--cb-coral);}
+.brand{font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:15px;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:8px;}
+.brand-wave{display:inline-flex;align-items:center;justify-content:center;background:var(--cb-coral);border-radius:6px;width:28px;height:28px;font-size:14px;}
+.brand span{color:var(--cb-coral);}
+.today-chip{font-size:11px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);padding:3px 10px;border-radius:20px;margin-left:10px;white-space:nowrap;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.nav-tabs-wrap{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none;}
+.nav-tabs-wrap::-webkit-scrollbar{display:none;}
+.nav-tab{padding:5px 13px;border-radius:6px;font-size:12px;font-weight:500;color:rgba(255,255,255,.5);cursor:pointer;white-space:nowrap;border:none;background:transparent;transition:all .2s;font-family:'Epilogue',sans-serif;}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,.08);}
+.nav-tab.active{background:var(--cb-coral);color:#fff;}
+.nav-divider{width:1px;height:20px;background:rgba(255,255,255,.15);flex-shrink:0;}
+.gantt-controls{display:flex;align-items:center;gap:14px;}
+.zoom-ctrl{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border-radius:8px;padding:4px 10px;}
+.btn-z{width:24px;height:24px;background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:5px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.btn-z:hover{background:rgba(255,255,255,.24);}
+.btn-z:disabled{opacity:.3;cursor:default;}
+.zoom-lbl{font-size:11.5px;color:rgba(255,255,255,.65);min-width:76px;text-align:center;}
+.legend{display:flex;gap:6px;}
+.leg{font-size:10.5px;padding:3px 9px;border-radius:4px;font-weight:600;}
+.leg.build{background:#FEF3C7;color:#92400E;}
+.leg.launch{background:#D1FAE5;color:#065F46;}
+.leg.run{background:#DBEAFE;color:#1E40AF;}
+.leg.occ{background:var(--cb-coral-l);color:var(--cb-coral-d);}
+.filter-bar{height:var(--filter-h);background:var(--cb-navy-mid);border-bottom:2px solid var(--cb-navy-light);display:flex;align-items:center;padding:0 18px;gap:8px;flex-shrink:0;z-index:35;overflow-x:auto;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-lbl{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);white-space:nowrap;margin-right:4px;}
+.fdiv{width:1px;height:22px;background:rgba(255,255,255,.15);margin:0 6px;flex-shrink:0;}
+.fbtn{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:7px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);cursor:pointer;white-space:nowrap;font-family:'Cabinet Grotesk',sans-serif;font-weight:700;font-size:11.5px;color:rgba(255,255,255,.6);transition:all .15s;flex-shrink:0;}
+.fbtn:hover{border-color:rgba(255,255,255,.4);color:#fff;}
+.fbtn.active{color:#fff !important;border-color:transparent;}
+.fbtn[data-bu=all].active{background:var(--cb-coral);}
+.fbtn[data-bu=corp].active{background:#1A3C6E;}
+.fbtn[data-bu=live].active{background:#B45309;}
+.fbtn[data-bu=you].active{background:#6B3FA0;}
+.fbtn[data-bu=endo].active{background:#166534;}
+.fbtn[data-bu=cs].active{background:#0B7A8A;}
+.fbtn[data-bu=tech].active{background:#374151;}
+.fbtn[data-bu=geral].active{background:#7C3AED;}
+.fbu-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.fcnt{min-width:18px;height:18px;border-radius:9px;background:rgba(0,0,0,.15);font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-family:'Cabinet Grotesk',sans-serif;font-weight:800;}
+.fbtn.active .fcnt{background:rgba(255,255,255,.22);}
+.alert-bar{background:var(--cb-gold-l);border-bottom:1px solid #FDE68A;padding:6px 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;font-size:11.5px;}
+.alert-bar.empty{padding:0;border:none;height:0;overflow:hidden;}
+.ac{font-weight:700;padding:2px 9px;border-radius:4px;}
+.ac.green{background:#D1FAE5;color:#065F46;}
+.ac.amber{background:#FEF3C7;color:#92400E;margin-left:8px;}
+.at{background:rgba(0,0,0,.06);padding:2px 8px;border-radius:4px;color:var(--cb-ink2);}
+.at.w{background:#FEF3C7;color:#92400E;}
+.gantt-wrap{display:flex;flex:1;overflow:hidden;min-height:0;}
+.gantt-names{width:var(--names-w);flex-shrink:0;background:#fff;border-right:2px solid var(--cb-rule);display:flex;flex-direction:column;overflow:hidden;z-index:20;box-shadow:2px 0 8px rgba(0,0,0,.06);}
+.names-hdr{flex-shrink:0;height:var(--header-h);background:var(--cb-navy);border-bottom:2px solid var(--cb-coral);display:flex;align-items:flex-end;padding:0 14px 8px;font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);}
+.names-body{flex:1;overflow:hidden;}
+.g-row{height:var(--group-h);background:var(--cb-navy-mid);display:flex;align-items:center;padding:0 14px;font-family:'Cabinet Grotesk',sans-serif;font-size:11px;font-weight:800;color:var(--cb-coral);border-bottom:1px solid var(--cb-navy-light);letter-spacing:.5px;}
+.t-row{height:var(--row-h);display:flex;align-items:center;padding:0 7px 0 12px;border-bottom:1px solid var(--cb-rule);gap:5px;background:#fff;transition:background .12s;border-left:3px solid transparent;}
+.t-row:hover{background:#FBF8F5;}
+.t-row.is-active{background:#F0FDF4;border-left-color:#10B981;}
+.t-row.has-alert{border-left-color:var(--cb-gold);}
+.t-row.is-active.has-alert{border-left-color:#EF4444;}
+.t-name{flex:1;font-size:11.5px;color:var(--cb-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bb{display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;}
+.bb.all{background:#F0F0F0;color:#666;}
+.bb.corp{background:var(--corp-l);color:var(--corp);}
+.bb.live{background:var(--live-l);color:var(--live);}
+.bb.you{background:var(--you-l);color:var(--you);}
+.bb.endo{background:var(--endo-l);color:var(--endo);}
+.bb.cs{background:var(--cs-l);color:var(--cs);}
+.bb.tech{background:var(--tech-l);color:var(--tech);}
+.bb.geral{background:var(--geral-l);color:var(--geral);}
+.wave-badge{display:inline-flex;align-items:center;padding:1px 5px;border-radius:3px;font-size:8px;font-weight:800;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+.wave-1{background:#D1FAE5;color:#065F46;}
+.wave-2{background:#DBEAFE;color:#1E40AF;}
+.wave-3{background:#FEF3C7;color:#92400E;}
+
+.dot-g{width:7px;height:7px;background:#10B981;border-radius:50%;flex-shrink:0;animation:pulse 1.6s infinite;}
+.dot-a{font-size:11px;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.4);}}
+.gantt-chart-wrap{flex:1;overflow:auto;position:relative;min-width:0;}
+.gantt-chart-wrap::-webkit-scrollbar{height:8px;width:8px;}
+.gantt-chart-wrap::-webkit-scrollbar-track{background:var(--cb-sand);}
+.gantt-chart-wrap::-webkit-scrollbar-thumb{background:var(--cb-rule2);border-radius:4px;}
+.date-hdr{position:sticky;top:0;z-index:15;background:#fff;border-bottom:2px solid var(--cb-rule);}
+.hdr-inner{position:relative;overflow:visible;}
+.hdr-row{position:absolute;left:0;right:0;}
+.hdr-months{height:24px;top:0;display:flex;}
+.hdr-days{height:20px;top:24px;display:flex;position:absolute;left:0;right:0;}
+.hdr-month{display:flex;align-items:center;justify-content:center;font-family:'Cabinet Grotesk',sans-serif;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;border-right:2px solid rgba(255,255,255,.2);}
+.hdr-week{display:flex;align-items:center;justify-content:center;font-family:'Cabinet Grotesk',sans-serif;font-size:9px;font-weight:700;color:var(--cb-ink3);border-right:1px solid var(--cb-rule);}
+.hdr-week.month-end{border-right:2px solid var(--cb-rule2);}
+.gantt-canvas-wrap{position:relative;}
+.canvas-g-row{position:absolute;background:var(--cb-navy);border-bottom:1px solid var(--cb-navy-light);}
+.canvas-t-row{position:absolute;display:flex;align-items:center;}
+.canvas-grid{position:absolute;left:0;right:0;height:1px;background:var(--cb-rule);}
+.seg{position:absolute;top:5px;bottom:5px;border-radius:5px;display:flex;align-items:center;padding:0 7px;font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;border:1px solid transparent;transition:opacity .12s;}
+.seg:hover{opacity:.85;}
+.seg-edit-hint{position:absolute;right:4px;font-size:9px;opacity:.5;}
+.seg-handle{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;z-index:5;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+.seg-handle::after{content:'';display:block;width:2px;height:60%;border-radius:2px;background:currentColor;opacity:.5;}
+.seg:hover .seg-handle{opacity:1;}
+.seg-handle-l{left:0;border-radius:5px 0 0 5px;}
+.seg-handle-r{right:0;border-radius:0 5px 5px 0;}
+.seg-lbl{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none;padding:0 10px;}
+.seg.dragging{opacity:.75;z-index:50;cursor:grabbing!important;box-shadow:0 4px 16px rgba(0,0,0,.25)!important;}
+.seg-tooltip{position:fixed;background:#0F2037;color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:6px;pointer-events:none;z-index:200;white-space:nowrap;font-family:'Cabinet Grotesk',sans-serif;border:1px solid rgba(255,255,255,.15);}
+
+.seg-build{background:#FEF3C7;color:#92400E;border-color:#FCD34D;}
+.seg-launch{background:#D1FAE5;color:#065F46;border-color:#6EE7B7;}
+.seg-run{background:#DBEAFE;color:#1E40AF;border-color:#93C5FD;}
+.seg-now{box-shadow:0 0 0 2px currentColor;}
+.seg-occ{background:var(--cb-coral-l);color:var(--cb-coral-d);border-color:var(--cb-coral);border-radius:4px;}
+.seg-occ-dot{position:absolute;top:8px;bottom:8px;width:6px;border-radius:3px;background:var(--cb-coral);opacity:.7;}
+.month-sep{position:absolute;top:0;width:2px;background:var(--cb-rule);}
+
+.hdr-day{display:flex;align-items:center;justify-content:center;font-family:'Cabinet Grotesk',sans-serif;font-size:7.5px;font-weight:600;border-right:1px solid rgba(255,255,255,.08);position:absolute;top:24px;height:20px;color:rgba(255,255,255,.45);user-select:none;}
+.hdr-day.today-day{color:#EF4444;font-weight:900;background:rgba(239,68,68,.15);}
+.hdr-day.weekend{color:rgba(255,255,255,.22);}
+.hdr-day.month-start{border-left:2px solid rgba(255,255,255,.2);}
+.today-line{position:absolute;top:0;width:2px;background:#EF4444;z-index:10;}
+.today-lbl{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#EF4444;color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;white-space:nowrap;}
+.today-pip{position:absolute;top:0;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:#EF4444;margin-top:-4px;}
+
+.today-lbl{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:#EF4444;color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;}
+.today-pip{position:absolute;top:0;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:#EF4444;margin-top:-4px;}
+.empty-state{height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--cb-ink3);}
+.esi{font-size:20px;}
+.edit-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;}
+.edit-ov.open{opacity:1;pointer-events:all;}
+.edit-panel{position:fixed;right:0;top:0;bottom:0;width:320px;background:#fff;z-index:101;transform:translateX(100%);transition:transform .25s;padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;box-shadow:-4px 0 24px rgba(0,0,0,.18);}
+.edit-panel.open{transform:translateX(0);}
+.ep-title{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;font-weight:800;color:var(--cb-ink);border-bottom:2px solid var(--cb-coral);padding-bottom:10px;}
+.ep-field{display:flex;flex-direction:column;gap:4px;}
+.ep-field label{font-size:11px;font-weight:700;color:var(--cb-ink3);text-transform:uppercase;letter-spacing:1px;}
+.ep-field input{border:1.5px solid var(--cb-rule);border-radius:7px;padding:8px 10px;font-size:13px;font-family:'Epilogue',sans-serif;outline:none;}
+.ep-field input:focus{border-color:var(--cb-coral);}
+.ep-badge{display:inline-flex;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;border:1px solid transparent;}
+.ep-owner{font-size:12px;color:var(--cb-ink2);background:var(--cb-sand);padding:8px 12px;border-radius:7px;}
+.ep-segs{display:flex;flex-direction:column;gap:6px;}
+.ep-segs-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cb-ink3);margin-bottom:2px;}
+.ep-seg-row{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:7px;border:1.5px solid var(--cb-rule);cursor:pointer;transition:all .12s;}
+.ep-field select{border:1.5px solid var(--cb-rule);border-radius:7px;padding:8px 10px;font-size:12px;font-family:'Epilogue',sans-serif;outline:none;background:#fff;color:var(--cb-ink);}
+.ep-field select:focus{border-color:var(--cb-coral);}
+.ep-field input[type=text]{border:1.5px solid var(--cb-rule);border-radius:7px;padding:8px 10px;font-size:13px;font-family:'Epilogue',sans-serif;outline:none;color:var(--cb-ink);}
+.ep-field input[type=text]:focus{border-color:var(--cb-coral);}
+.ep-seg-row{display:flex;gap:8px;align-items:center;}
+
+.ep-seg-row:hover{border-color:var(--cb-coral);}
+.ep-seg-row.cur{border-color:var(--cb-coral);background:var(--cb-coral-l);}
+.ep-seg-type{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.ep-seg-dates{font-size:10.5px;color:var(--cb-ink3);line-height:1.4;}
+.ep-info{font-size:11px;color:var(--cb-ink3);background:var(--cb-sand);padding:8px 10px;border-radius:6px;line-height:1.5;}
+.ep-actions{display:flex;gap:8px;}
+.btn-save{flex:1;background:var(--cb-coral);color:#fff;border:none;border-radius:8px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;}
+.btn-save:hover{background:var(--cb-coral-d);}
+.btn-can{flex:1;background:var(--cb-sand);color:var(--cb-ink2);border:none;border-radius:8px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;}
+.raci-wrap{flex:1;display:flex;flex-direction:column;min-height:0;}
+.raci-filters{display:flex;align-items:center;gap:10px;padding:10px 18px;background:var(--cb-navy-mid);flex-shrink:0;flex-wrap:wrap;}
+.raci-filters input,.raci-filters select{border:1.5px solid rgba(255,255,255,.2);border-radius:7px;padding:6px 10px;font-size:12px;font-family:'Epilogue',sans-serif;background:rgba(255,255,255,.1);color:#fff;outline:none;}
+.raci-filters input::placeholder{color:rgba(255,255,255,.4);}
+.raci-filters select option{background:#1C3450;color:#fff;}
+.raci-table-wrap{flex:1;overflow:auto;}
+.raci-table-wrap::-webkit-scrollbar{height:8px;width:8px;}
+.raci-table-wrap::-webkit-scrollbar-thumb{background:var(--cb-rule2);border-radius:4px;}
+#raciTable{min-width:max-content;}
+.roadmap-wrap-outer{flex:1;overflow:auto;padding:24px 32px 48px;}
+.roadmap-wrap{overflow-x:auto;padding-bottom:12px;border-radius:10px;border:1px solid var(--cb-rule);}
+.roadmap-table{border-collapse:collapse;min-width:1600px;width:100%;background:#fff;}
+.roadmap-table thead tr:first-child th{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:12px;letter-spacing:.5px;padding:10px 4px;text-align:center;color:#fff;border-right:2px solid rgba(255,255,255,.2);white-space:nowrap;}
+.roadmap-table thead tr:first-child th:last-child{border-right:none;}
+.roadmap-table thead tr:first-child th.lbl-col{background:var(--cb-navy);text-align:left;padding:10px 14px;min-width:175px;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.5);border-right:2px solid rgba(255,255,255,.15);}
+.roadmap-table thead tr:nth-child(2) th{font-family:'Cabinet Grotesk',sans-serif;font-weight:700;font-size:9px;letter-spacing:1px;padding:5px 2px;text-align:center;color:rgba(255,255,255,.7);border-right:1px solid rgba(255,255,255,.1);min-width:38px;}
+.roadmap-table thead tr:nth-child(2) th.lbl-week{background:#111;border-right:2px solid rgba(255,255,255,.15);color:transparent;}
+.roadmap-table thead tr:nth-child(2) th.month-end{border-right:2px solid rgba(255,255,255,.3)!important;}
+.f1{background:#7F1D1D;}.f2{background:#78350F;}.f3{background:#14532D;}.f4{background:#1E3A5F;}
+.f1w{background:#991B1B;}.f2w{background:#92400E;}.f3w{background:#166534;}.f4w{background:#1E40AF;}
+.roadmap-table tbody tr.phase-row td{padding:6px 14px;font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--cb-rule);}
+.roadmap-table tbody tr.phase-row td:first-child{background:var(--cb-navy);color:rgba(255,255,255,.6);}
+.roadmap-table tbody tr.phase-row td.f1-bg{background:#FEF2F2;color:var(--ph1);}
+.roadmap-table tbody tr.phase-row td.f2-bg{background:#FFFBEB;color:var(--ph2);}
+.roadmap-table tbody tr.phase-row td.f3-bg{background:#F0FDF4;color:var(--ph3);}
+.roadmap-table tbody tr.phase-row td.f4-bg{background:#EFF6FF;color:var(--ph4);}
+.roadmap-table tbody tr.cat-row td{background:var(--cb-navy);color:rgba(255,255,255,.55);font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,.1);}
+.roadmap-table tbody tr.cat-row td+td{background:#111;}
+.roadmap-table tbody tr.data-row td{padding:0;border-bottom:1px solid var(--cb-rule);vertical-align:middle;}
+.roadmap-table tbody tr.data-row td.row-label{padding:9px 14px;font-size:12px;color:var(--cb-ink2);background:#FAFAF8;border-right:2px solid var(--cb-rule);white-space:nowrap;min-width:175px;}
+.roadmap-table tbody tr.data-row td.month-cell{padding:3px 4px;border-right:1px solid var(--cb-rule);min-width:38px;text-align:center;vertical-align:middle;}
+.roadmap-table tbody tr.data-row td.m-end{border-right:2px solid var(--cb-rule);}
+.cell-bar{display:block;border-radius:4px;padding:3px 4px;font-family:'Cabinet Grotesk',sans-serif;font-size:9px;font-weight:700;text-align:center;white-space:nowrap;letter-spacing:.3px;}
+.bar-build{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;}
+.bar-launch{background:#DCFCE7;color:#166534;border:1px solid #86EFAC;}
+.bar-run{background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;}
+.bar-occ{background:var(--cb-coral-l);color:var(--cb-coral-d);border:1px solid var(--cb-coral);}
+.bar-occ-sm{display:inline-block;width:10px;height:18px;border-radius:3px;background:var(--cb-coral);margin:1px;vertical-align:middle;}
+.section{margin-bottom:40px;}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid var(--cb-rule);}
+.section-num{font-family:'Cabinet Grotesk',sans-serif;font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--cb-ink3);}
+.section-title{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;color:var(--cb-ink);}
+.team-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.team-card{background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:18px 16px;border-top:4px solid;}
+.team-avatar{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px;}
+.team-role{font-family:'Cabinet Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--cb-ink);margin-bottom:4px;}
+.team-focus{font-size:11.5px;color:var(--cb-ink3);line-height:1.5;margin-bottom:12px;}
+.team-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.team-tag{font-size:10.5px;padding:2px 7px;border-radius:4px;background:var(--cb-sand);color:var(--cb-ink2);border:1px solid var(--cb-rule);}
+.phases-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
+.phase-block{background:#fff;border:1px solid var(--cb-rule);border-radius:10px;overflow:hidden;}
+.phase-header{padding:14px 16px 12px;border-bottom:1px solid var(--cb-rule);}
+.phase-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.phase-badge-dot{width:6px;height:6px;border-radius:50%;}
+.phase-name{font-family:'Cabinet Grotesk',sans-serif;font-size:15px;font-weight:800;color:var(--cb-ink);margin-bottom:2px;}
+.phase-period{font-size:11.5px;color:var(--cb-ink3);}
+.phase-body{padding:14px 16px;}
+.phase-item{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--cb-rule);}
+.phase-item:last-child{border-bottom:none;}
+.phase-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.phase-item-text{font-size:11.5px;color:var(--cb-ink2);line-height:1.5;}
+.cad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.cad-card{background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;}
+.cad-freq{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:900;margin-bottom:4px;}
+.cad-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--cb-ink3);margin-bottom:12px;}
+.cad-items{display:flex;flex-direction:column;gap:5px;}
+.cad-item{font-size:11.5px;color:var(--cb-ink2);padding:5px 8px;background:var(--cb-sand);border-radius:5px;display:flex;align-items:center;gap:6px;}
+.cad-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.mat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.mat-card{background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:18px;}
+.mat-title{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;font-weight:800;color:var(--cb-ink);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.mat-level{display:flex;flex-direction:column;gap:8px;}
+.mat-row{display:flex;gap:10px;align-items:flex-start;}
+.mat-badge{min-width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:900;flex-shrink:0;}
+.mat-text{font-size:11.5px;color:var(--cb-ink2);line-height:1.5;}
+.vo-header{background:var(--cb-navy);padding:32px;border-radius:12px;margin-bottom:24px;position:relative;overflow:hidden;}
+.vo-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cb-coral) 0%,var(--cb-gold) 50%,var(--cb-teal) 100%);}
+.vo-title{font-family:'Cabinet Grotesk',sans-serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:6px;}
+.vo-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:20px;}
+.vo-stats{display:flex;gap:28px;}
+.vo-stat-num{font-family:'Cabinet Grotesk',sans-serif;font-size:28px;font-weight:900;color:var(--cb-coral);line-height:1;display:block;}
+.vo-stat-lbl{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;}
+.vo-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.vo-kpi{background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:14px 16px;border-left:4px solid;}
+.vo-kpi-num{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:900;}
+.vo-kpi-lbl{font-size:11px;color:var(--cb-ink3);}
+.vo-kpi-note{font-size:10.5px;color:var(--cb-ink3);margin-top:4px;}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.legend-pill{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--cb-rule);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--cb-ink2);}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.view-page{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.view-page.active{display:flex;}
+.page-scroll{flex:1;overflow-y:auto;padding:24px 32px 48px;}
+.page-scroll::-webkit-scrollbar{width:6px;}
+.page-scroll::-webkit-scrollbar-thumb{background:var(--cb-rule2);border-radius:3px;}
+/* ── Supabase sync indicator ─────────────────────────────────────────── */
+.cb-sync-pill{font-family:'Epilogue',sans-serif;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-left:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);transition:all .25s;}
+.cb-sync-pill.ok{background:rgba(16,185,129,.18);color:#A7F3D0;}
+.cb-sync-pill.saving{background:rgba(217,119,6,.22);color:#FCD34D;}
+.cb-sync-pill.err{background:rgba(220,38,38,.22);color:#FCA5A5;}
+.cb-sync-pill::before{content:'●';font-size:10px;}
+</style>
+<!-- Supabase JS — CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<!-- ⚠️ EDITAR AQUI: cole sua URL e anon key do Supabase ────────────── -->
+<script>
+  window.CB_SUPABASE = {
+    URL: 'https://cxlwkqsxzozfarrmqrfd.supabase.co',
+    ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4bHdrcXN4em96ZmFycm1xcmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Nzc4MTgsImV4cCI6MjA5MzE1MzgxOH0.T7oPdCbYsw5oQrj80n9Mit2S-2gfkB_r335VM8_DhnM',
+    ROW_ID: 'main'
+  };
+</script>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-wave">🌊</div>
+    <span>Costa Brava</span>
+    <span style="color:rgba(255,255,255,.3);font-weight:400">·</span>
+    <span style="color:rgba(255,255,255,.7);font-weight:600;font-size:13px;">TMC MKT 2026</span>
+    <span id="todayChip" class="today-chip"></span>
+  </div>
+  <div class="nav-tabs-wrap">
+    <button class="nav-tab active" onclick="setView('gantt')">📊 Gantt</button>
+    <button class="nav-tab" onclick="setView('raci')">📋 RACI</button>
+    <div class="nav-divider"></div>
+    <button class="nav-tab" onclick="setView('visao')">🗺 Visão Geral</button>
+    <button class="nav-tab" onclick="setView('equipe')">👥 Equipe</button>
+    <button class="nav-tab" onclick="setView('fases')">🚀 Fases</button>
+    <button class="nav-tab" onclick="setView('cadencia')">📅 Cadência</button>
+    <button class="nav-tab" onclick="setView('maturidade')">🎯 Maturidade</button>
+  </div>
+  <div class="topbar-right">
+    <div class="gantt-controls" id="ganttControls">
+      <div class="zoom-ctrl">
+        <button class="btn-z" id="bzOut" onclick="cZoom(-1)">−</button>
+        <span class="zoom-lbl" id="zLbl">Semanas</span>
+        <button class="btn-z" id="bzIn" onclick="cZoom(1)">+</button>
+      </div>
+      <div class="legend">
+        <span class="leg build">Build</span>
+        <span class="leg launch">Launch</span>
+        <span class="leg run">Run</span>
+        <span class="leg occ">Ocorrência</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view-page active" id="vGantt" style="flex-direction:column;">
+  <div class="filter-bar">
+    <span class="filter-lbl">BU</span>
+    <button class="fbtn active" data-bu="all" onclick="setBU('all')">
+      <span class="fbu-dot" style="background:var(--cb-coral);"></span>All <span class="fcnt" id="cnt-all">—</span>
+    </button>
+    <div class="fdiv"></div>
+    <button class="fbtn" data-bu="corp" onclick="setBU('corp')">
+      <span class="fbu-dot" style="background:var(--corp);"></span>Business Travel <span class="fcnt" id="cnt-corp">—</span>
+    </button>
+    <button class="fbtn" data-bu="live" onclick="setBU('live')">
+      <span class="fbu-dot" style="background:var(--live);"></span>Live Marketing <span class="fcnt" id="cnt-live">—</span>
+    </button>
+    <button class="fbtn" data-bu="you" onclick="setBU('you')">
+      <span class="fbu-dot" style="background:var(--you);"></span>YOU <span class="fcnt" id="cnt-you">—</span>
+    </button>
+    <button class="fbtn" data-bu="endo" onclick="setBU('endo')">
+      <span class="fbu-dot" style="background:var(--endo);"></span>CI / Endo <span class="fcnt" id="cnt-endo">—</span>
+    </button>
+    <div class="fdiv"></div>
+    <button class="fbtn" data-bu="cs" onclick="setBU('cs')">
+      <span class="fbu-dot" style="background:var(--cs);"></span>CS <span class="fcnt" id="cnt-cs">—</span>
+    </button>
+    <button class="fbtn" data-bu="tech" onclick="setBU('tech')">
+      <span class="fbu-dot" style="background:var(--tech);"></span>TechHub <span class="fcnt" id="cnt-tech">—</span>
+    </button>
+    <button class="fbtn" data-bu="geral" onclick="setBU('geral')">
+      <span class="fbu-dot" style="background:var(--geral);"></span>Geral <span class="fcnt" id="cnt-geral">—</span>
+    </button>
+    <div class="fdiv"></div>
+    <button class="fbtn" onclick="openAddRow()" style="background:var(--cb-coral);border-color:var(--cb-coral);color:#fff;">
+      <span style="font-size:14px;line-height:1;">＋</span> Nova Atividade
+    </button>
+  </div>
+  <div class="alert-bar empty" id="alertBar"></div>
+  <div class="gantt-wrap">
+    <div class="gantt-names">
+      <div class="names-hdr">Atividade</div>
+      <div class="names-body" id="namesBody"></div>
+    </div>
+    <div class="gantt-chart-wrap" id="chartWrap">
+      <div class="date-hdr" id="dateHdr">
+        <div class="hdr-inner" id="hdrInner">
+          <div class="hdr-row hdr-months" id="hdrMonths"></div>
+          <div class="hdr-row hdr-days" id="hdrDays"></div>
+        </div>
+      </div>
+      <div class="gantt-canvas-wrap" id="canvas"></div>
+    </div>
+  </div>
+</div>
+
+<div class="view-page" id="vRaci" style="flex-direction:column;">
+  <div class="raci-filters">
+    <input type="text" id="raciSearch" placeholder="🔍 Buscar atividade…" oninput="filterRaci()" style="width:220px;">
+    <select id="raciPerson" onchange="filterRaci()"><option value="">Todas as pessoas</option></select>
+    <select id="raciRole" onchange="filterRaci()">
+      <option value="">Todos os papéis</option>
+      <option value="R">R — Responsável</option>
+      <option value="A">A — Aprovador</option>
+      <option value="C">C — Consultado</option>
+      <option value="I">I — Informado</option>
+      <option value="X">X — Ferramenta</option>
+    </select>
+  </div>
+  <div class="raci-table-wrap raci-wrap" style="flex:1;overflow:auto;">
+    <div id="raciTable"></div>
+  </div>
+</div>
+
+<div class="view-page" id="vVisao">
+  <div class="page-scroll">
+    <div class="vo-header">
+      <div class="vo-title">Roadmap de Marketing — TMC Brasil 2026</div>
+      <div class="vo-sub">12 meses · 3 BUs + CI/Endomkt · Mai/2026 → Abr/2027</div>
+      <div class="vo-stats">
+        <div><span class="vo-stat-num">34</span><span class="vo-stat-lbl">Iniciativas</span></div>
+        <div><span class="vo-stat-num">5</span><span class="vo-stat-lbl">Profissionais</span></div>
+        <div><span class="vo-stat-num">4</span><span class="vo-stat-lbl">BUs</span></div>
+        <div><span class="vo-stat-num">4</span><span class="vo-stat-lbl">Fases</span></div>
+      </div>
+    </div>
+    <div class="vo-kpi-grid">
+      <div class="vo-kpi" style="border-left-color:var(--cb-coral);">
+        <div class="vo-kpi-num" style="color:var(--cb-coral);">Mai–Jun</div>
+        <div class="vo-kpi-lbl">Fase 1 — Base</div>
+        <div class="vo-kpi-note">CRM, identidade, SEO, leads</div>
+      </div>
+      <div class="vo-kpi" style="border-left-color:var(--ph2);">
+        <div class="vo-kpi-num" style="color:var(--ph2);">Jul–Set</div>
+        <div class="vo-kpi-lbl">Fase 2 — Ativação</div>
+        <div class="vo-kpi-note">Campanhas, ABM, Sales Enablement</div>
+      </div>
+      <div class="vo-kpi" style="border-left-color:var(--ph3);">
+        <div class="vo-kpi-num" style="color:var(--ph3);">Out–Dez</div>
+        <div class="vo-kpi-lbl">Fase 3 — Escala</div>
+        <div class="vo-kpi-note">Retenção, expansão, NPS</div>
+      </div>
+      <div class="vo-kpi" style="border-left-color:var(--ph4);">
+        <div class="vo-kpi-num" style="color:var(--ph4);">Jan–Mar</div>
+        <div class="vo-kpi-lbl">Fase 4 — Otimização</div>
+        <div class="vo-kpi-note">Programa VIP, ABM expansão</div>
+      </div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-pill"><span class="legend-dot" style="background:#FCD34D;"></span>Build — estruturação</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:#6EE7B7;"></span>Launch — ativação</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:#93C5FD;"></span>Run — execução contínua</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:var(--cb-coral);"></span>Ocorrência pontual</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:var(--corp);"></span>Business Travel</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:var(--live);"></span>Live Marketing</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:var(--you);"></span>YOU by CB</div>
+      <div class="legend-pill"><span class="legend-dot" style="background:var(--endo);"></span>CI / Endo</div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <span class="section-title">Visão Macro — 12 Meses</span>
+      </div>
+      <div class="roadmap-wrap" id="roadmapWrap"></div>
+    </div>
+  </div>
+</div>
+
+<div class="view-page" id="vEquipe">
+  <div class="page-scroll">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <span class="section-title">Time de Marketing</span>
+      </div>
+      <div class="team-grid">
+        <div class="team-card" style="border-top-color:var(--cb-coral);">
+          <div class="team-avatar" style="background:var(--cb-coral-l);">👩‍💼</div>
+          <div class="team-role">Gerente de MKT</div>
+          <div class="team-focus">Estratégia, posicionamento, gestão de equipe e stakeholders. Responsável pela visão macro.</div>
+          <div class="team-tags">
+            <span class="team-tag">Estratégia</span><span class="team-tag">Gestão</span><span class="team-tag">PR</span><span class="team-tag">ABM</span>
+          </div>
+        </div>
+        <div class="team-card" style="border-top-color:var(--cb-navy);">
+          <div class="team-avatar" style="background:var(--cb-teal-l);">📊</div>
+          <div class="team-role">Coordenador de MKT</div>
+          <div class="team-focus">Operação de CRM, automações, nutrição de leads, CI/Endo e relatórios de desempenho.</div>
+          <div class="team-tags">
+            <span class="team-tag">CRM</span><span class="team-tag">HubSpot</span><span class="team-tag">Endomkt</span><span class="team-tag">Analytics</span>
+          </div>
+        </div>
+        <div class="team-card" style="border-top-color:var(--corp);">
+          <div class="team-avatar" style="background:var(--corp-l);">✍️</div>
+          <div class="team-role">Analista de Conteúdo</div>
+          <div class="team-focus">Produção de conteúdo, newsletters, blog, LinkedIn. Responsável pela cadência editorial.</div>
+          <div class="team-tags">
+            <span class="team-tag">Blog</span><span class="team-tag">Newsletter</span><span class="team-tag">LinkedIn</span><span class="team-tag">SEO</span>
+          </div>
+        </div>
+        <div class="team-card" style="border-top-color:var(--live);">
+          <div class="team-avatar" style="background:var(--live-l);">📈</div>
+          <div class="team-role">Analista de Sales MKT</div>
+          <div class="team-focus">ABM, base de leads B2B, sales enablement, battlecards e análise de dados comerciais.</div>
+          <div class="team-tags">
+            <span class="team-tag">ABM</span><span class="team-tag">Leads B2B</span><span class="team-tag">Speedio</span><span class="team-tag">Playbooks</span>
+          </div>
+        </div>
+        <div class="team-card" style="border-top-color:var(--you);">
+          <div class="team-avatar" style="background:var(--you-l);">🎨</div>
+          <div class="team-role">Designer</div>
+          <div class="team-focus">Criação visual, templates por BU, lookbook YOU, materiais de campanha e identidade.</div>
+          <div class="team-tags">
+            <span class="team-tag">Design</span><span class="team-tag">Templates</span><span class="team-tag">Lookbook</span><span class="team-tag">Adobe</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">02B</span>
+        <span class="section-title">Distribuição por BU</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;border-top:4px solid var(--corp);">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:14px;color:var(--corp);margin-bottom:6px;">Business Travel</div>
+          <div style="font-size:11.5px;color:var(--cb-ink3);line-height:1.7;">CRM B2B · Newsletter · LinkedIn · Blog · ABM · PR · Cases · NPS</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;border-top:4px solid var(--live);">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:14px;color:var(--live);margin-bottom:6px;">Live Marketing</div>
+          <div style="font-size:11.5px;color:var(--cb-ink3);line-height:1.7;">Newsletter · LinkedIn · Blog · ABM Eventos · Sales Enablement · PR</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;border-top:4px solid var(--you);">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:14px;color:var(--you);margin-bottom:6px;">YOU by Costa Brava</div>
+          <div style="font-size:11.5px;color:var(--cb-ink3);line-height:1.7;">Newsletter Luxo · Lookbook · Régua de nutrição · Programa VIP · Blog</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;border-top:4px solid var(--endo);">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:14px;color:var(--endo);margin-bottom:6px;">CI / Endomarketing</div>
+          <div style="font-size:11.5px;color:var(--cb-ink3);line-height:1.7;">Calendário CI · Newsletter Interna · Engajamento · Clima · Onboarding</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view-page" id="vFases">
+  <div class="page-scroll">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <span class="section-title">Fases do Plano</span>
+      </div>
+      <div class="phases-grid">
+        <div class="phase-block">
+          <div class="phase-header" style="background:#FEF2F2;">
+            <div class="phase-badge" style="color:var(--ph1);"><span class="phase-badge-dot" style="background:var(--ph1);"></span>FASE 1</div>
+            <div class="phase-name">Base & Estrutura</div>
+            <div class="phase-period">Mai — Jun 2026</div>
+          </div>
+          <div class="phase-body">
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph1);"></span><span class="phase-item-text">Configuração CRM + HubSpot com automações</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph1);"></span><span class="phase-item-text">Identidade de conteúdo e tom de voz por BU</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph1);"></span><span class="phase-item-text">Templates visuais padronizados</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph1);"></span><span class="phase-item-text">Auditoria técnica SEO + arquitetura</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph1);"></span><span class="phase-item-text">Base de leads B2B (Speedio/Neoway)</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph1);"></span><span class="phase-item-text">Calendário de CI + Comunicação Interna</span></div>
+          </div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-header" style="background:#FFFBEB;">
+            <div class="phase-badge" style="color:var(--ph2);"><span class="phase-badge-dot" style="background:var(--ph2);"></span>FASE 2</div>
+            <div class="phase-name">Ativação & Tração</div>
+            <div class="phase-period">Jul — Set 2026</div>
+          </div>
+          <div class="phase-body">
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph2);"></span><span class="phase-item-text">Newsletters ativas (Corp, Live, YOU, CI)</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph2);"></span><span class="phase-item-text">LinkedIn orgânico + porta-vozes executivos</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph2);"></span><span class="phase-item-text">Blog Corp + Live + YOU em produção</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph2);"></span><span class="phase-item-text">ABM Lite Corp e ABM por segmento Live</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph2);"></span><span class="phase-item-text">Playbooks + Battlecards publicados</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph2);"></span><span class="phase-item-text">Lookbook YOU + Propostas personalizadas</span></div>
+          </div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-header" style="background:#F0FDF4;">
+            <div class="phase-badge" style="color:var(--ph3);"><span class="phase-badge-dot" style="background:var(--ph3);"></span>FASE 3</div>
+            <div class="phase-name">Escala & Retenção</div>
+            <div class="phase-period">Out — Dez 2026</div>
+          </div>
+          <div class="phase-body">
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph3);"></span><span class="phase-item-text">NPS / CSAT em execução (trimestral)</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph3);"></span><span class="phase-item-text">ABM 1:1 para decisores (comitê)</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph3);"></span><span class="phase-item-text">BID Avoidance Communication ativo</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph3);"></span><span class="phase-item-text">Réguas de nutrição (Corp, Live, YOU)</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph3);"></span><span class="phase-item-text">Pesquisa de clima / eNPS semestral</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph3);"></span><span class="phase-item-text">Programa de indicação — estrutura</span></div>
+          </div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-header" style="background:#EFF6FF;">
+            <div class="phase-badge" style="color:var(--ph4);"><span class="phase-badge-dot" style="background:var(--ph4);"></span>FASE 4</div>
+            <div class="phase-name">Otimização & Expansão</div>
+            <div class="phase-period">Jan — Mar 2027</div>
+          </div>
+          <div class="phase-body">
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph4);"></span><span class="phase-item-text">Programa VIP YOU — comitê de clientes</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph4);"></span><span class="phase-item-text">ABM Expansão — upsell e cross-sell</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph4);"></span><span class="phase-item-text">Revisão de todas as réguas e automações</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph4);"></span><span class="phase-item-text">Casos de sucesso por BU (trimestre 4)</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph4);"></span><span class="phase-item-text">Planejamento 2027 com dados reais</span></div>
+            <div class="phase-item"><span class="phase-dot" style="background:var(--ph4);"></span><span class="phase-item-text">Report anual e revisão de metas</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view-page" id="vCadencia">
+  <div class="page-scroll">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <span class="section-title">Cadência de Entregas</span>
+      </div>
+      <div style="background:var(--cb-coral-l);border:1px solid var(--cb-coral);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--cb-coral-d);display:flex;gap:10px;align-items:flex-start;">
+        <span style="font-size:16px;">💡</span>
+        <span>Demandas pontuais são representadas no Gantt com barras individuais por ocorrência — ex: Newsletter 2x/mês = <strong>duas barras separadas</strong> (S1 e S3 de cada mês), não uma barra contínua.</span>
+      </div>
+      <div class="cad-grid">
+        <div class="cad-card" style="border-top:4px solid var(--cb-coral);">
+          <div class="cad-freq" style="color:var(--cb-coral);">2×</div>
+          <div class="cad-label">por semana</div>
+          <div class="cad-items">
+            <div class="cad-item"><span class="cad-dot" style="background:var(--corp);"></span>Posts LinkedIn (empresa)</div>
+          </div>
+        </div>
+        <div class="cad-card" style="border-top:4px solid var(--cb-navy);">
+          <div class="cad-freq" style="color:var(--cb-navy);">2×</div>
+          <div class="cad-label">por mês</div>
+          <div class="cad-items">
+            <div class="cad-item"><span class="cad-dot" style="background:var(--corp);"></span>Newsletter Corp (S1+S3)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--live);"></span>Newsletter Live MKT (S1+S3)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--you);"></span>Newsletter YOU Luxo (S1+S3)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--corp);"></span>Newsletter LinkedIn (S1+S3)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--cb-coral);"></span>Posts Porta-vozes (S1+S3)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--corp);"></span>Blog Corp — 2 artigos (S2+S4)</div>
+          </div>
+        </div>
+        <div class="cad-card" style="border-top:4px solid var(--cb-teal);">
+          <div class="cad-freq" style="color:var(--cb-teal);">1×</div>
+          <div class="cad-label">por mês</div>
+          <div class="cad-items">
+            <div class="cad-item"><span class="cad-dot" style="background:var(--endo);"></span>Newsletter Interna CI (S1)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--live);"></span>Blog Live MKT (S2)</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--you);"></span>Blog YOU by CB (S2)</div>
+          </div>
+        </div>
+        <div class="cad-card" style="border-top:4px solid var(--ph3);">
+          <div class="cad-freq" style="color:var(--ph3);">Trimestral / Semestral</div>
+          <div class="cad-label">ocorrências pontuais</div>
+          <div class="cad-items">
+            <div class="cad-item"><span class="cad-dot" style="background:var(--ph2);"></span>NPS / CSAT — trimestral</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--endo);"></span>Pesquisa de Clima eNPS — semestral</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--ph2);"></span>Endomkt Cultura — trimestral</div>
+            <div class="cad-item"><span class="cad-dot" style="background:var(--corp);"></span>Cases de sucesso — trimestral</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">04B</span>
+        <span class="section-title">Rituais de Gestão</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:13px;color:var(--cb-coral);margin-bottom:10px;">⚡ Semanal</div>
+          <div style="font-size:11.5px;color:var(--cb-ink2);line-height:1.8;">
+            • Alinhamento de pauta (equipe MKT)<br>
+            • Review de métricas básicas<br>
+            • Planejamento da semana editorial
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:13px;color:var(--cb-navy);margin-bottom:10px;">📅 Mensal</div>
+          <div style="font-size:11.5px;color:var(--cb-ink2);line-height:1.8;">
+            • Report de performance por BU<br>
+            • Revisão de leads e pipeline<br>
+            • Alinhamento com Vendas e CS
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:16px;">
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:13px;color:var(--ph3);margin-bottom:10px;">📊 Trimestral</div>
+          <div style="font-size:11.5px;color:var(--cb-ink2);line-height:1.8;">
+            • OKR review e ajuste de metas<br>
+            • Pesquisa NPS / CSAT<br>
+            • Cases de sucesso publicados<br>
+            • Revisão de roadmap
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view-page" id="vMaturidade">
+  <div class="page-scroll">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <span class="section-title">Modelo de Maturidade de Marketing</span>
+      </div>
+      <div class="mat-grid">
+        <div class="mat-card">
+          <div class="mat-title"><span style="font-size:20px;">🏗</span> Infraestrutura</div>
+          <div class="mat-level">
+            <div class="mat-row"><span class="mat-badge" style="background:#FEF3C7;color:#92400E;">L1</span><span class="mat-text">Sem CRM / Excel manual, sem templates</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#D1FAE5;color:#065F46;">L2</span><span class="mat-text">CRM configurado, identidade visual unificada</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#DBEAFE;color:#1E40AF;">L3</span><span class="mat-text">Automações ativas, pipeline integrado às vendas</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:var(--cb-coral-l);color:var(--cb-coral-d);">L4</span><span class="mat-text">Inteligência de dados orientando decisões em tempo real</span></div>
+          </div>
+        </div>
+        <div class="mat-card">
+          <div class="mat-title"><span style="font-size:20px;">📧</span> E-mail & Nutrição</div>
+          <div class="mat-level">
+            <div class="mat-row"><span class="mat-badge" style="background:#FEF3C7;color:#92400E;">L1</span><span class="mat-text">Comunicações pontuais sem segmentação</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#D1FAE5;color:#065F46;">L2</span><span class="mat-text">Newsletters regulares por BU (2x/mês)</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#DBEAFE;color:#1E40AF;">L3</span><span class="mat-text">Réguas de nutrição por segmento e funil</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:var(--cb-coral-l);color:var(--cb-coral-d);">L4</span><span class="mat-text">Hyperpersonalização com IA e scoring de leads</span></div>
+          </div>
+        </div>
+        <div class="mat-card">
+          <div class="mat-title"><span style="font-size:20px;">🔍</span> SEO / GEO / Conteúdo</div>
+          <div class="mat-level">
+            <div class="mat-row"><span class="mat-badge" style="background:#FEF3C7;color:#92400E;">L1</span><span class="mat-text">Sem estratégia de conteúdo documentada</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#D1FAE5;color:#065F46;">L2</span><span class="mat-text">Blog regular + auditoria técnica SEO</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#DBEAFE;color:#1E40AF;">L3</span><span class="mat-text">Topical authority + GEO ativo + link building</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:var(--cb-coral-l);color:var(--cb-coral-d);">L4</span><span class="mat-text">Domínio de SERP para viagens e eventos B2B</span></div>
+          </div>
+        </div>
+        <div class="mat-card">
+          <div class="mat-title"><span style="font-size:20px;">🎯</span> ABM & Sales Enablement</div>
+          <div class="mat-level">
+            <div class="mat-row"><span class="mat-badge" style="background:#FEF3C7;color:#92400E;">L1</span><span class="mat-text">Sem materiais de vendas padronizados</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#D1FAE5;color:#065F46;">L2</span><span class="mat-text">Playbooks e battlecards disponíveis</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#DBEAFE;color:#1E40AF;">L3</span><span class="mat-text">ABM Lite rodando com listas segmentadas</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:var(--cb-coral-l);color:var(--cb-coral-d);">L4</span><span class="mat-text">ABM 1:1 para decisores estratégicos</span></div>
+          </div>
+        </div>
+        <div class="mat-card">
+          <div class="mat-title"><span style="font-size:20px;">💛</span> Retenção & NPS</div>
+          <div class="mat-level">
+            <div class="mat-row"><span class="mat-badge" style="background:#FEF3C7;color:#92400E;">L1</span><span class="mat-text">Sem processo formal de escuta de clientes</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#D1FAE5;color:#065F46;">L2</span><span class="mat-text">NPS/CSAT trimestral implantado</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#DBEAFE;color:#1E40AF;">L3</span><span class="mat-text">BID Avoidance + Programa de Indicação</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:var(--cb-coral-l);color:var(--cb-coral-d);">L4</span><span class="mat-text">Programa VIP + Advocacy público de clientes</span></div>
+          </div>
+        </div>
+        <div class="mat-card">
+          <div class="mat-title"><span style="font-size:20px;">📣</span> CI & Endomarketing</div>
+          <div class="mat-level">
+            <div class="mat-row"><span class="mat-badge" style="background:#FEF3C7;color:#92400E;">L1</span><span class="mat-text">Comunicações internas ad hoc, sem calendário</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#D1FAE5;color:#065F46;">L2</span><span class="mat-text">Calendário CI + newsletter interna mensal</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:#DBEAFE;color:#1E40AF;">L3</span><span class="mat-text">Campanhas de engajamento + pesquisa de clima</span></div>
+            <div class="mat-row"><span class="mat-badge" style="background:var(--cb-coral-l);color:var(--cb-coral-d);">L4</span><span class="mat-text">CI estratégica alinhada à cultura e OKRs</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:24px;background:var(--cb-navy);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:20px;">
+        <div>
+          <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:14px;color:#fff;margin-bottom:4px;">🚀 Meta 2026: atingir nível L3 em todas as dimensões</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Partindo de L1/L2 em Mar/2026 — progressão sustentada ao longo das 4 fases do roadmap.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="edit-ov" id="editOv" onclick="closeEdit()"></div>
+<div class="edit-panel" id="editPanel">
+  <div class="ep-title" id="epTitle"></div>
+  <div id="epBody"></div>
+</div>
+
+<script>
+const PS=new Date(2026,4,4);
+const PE=new Date(2027,4,4);
+const ZL=[{lbl:'Visão Geral',dw:8},{lbl:'Semanas',dw:16},{lbl:'Detalhe',dw:26}];
+let zi=1;
+const ROW=36,GRP=30;
+const SC={
+  build:{lbl:'Build',bg:'#FEF3C7',t:'#92400E',b:'#FCD34D'},
+  launch:{lbl:'Launch',bg:'#D1FAE5',t:'#065F46',b:'#6EE7B7'},
+  run:{lbl:'Run',bg:'#DBEAFE',t:'#1E40AF',b:'#93C5FD'},
+  occ:{lbl:'◆',bg:'#FBE8DF',t:'#C44E20',b:'#E05C2A'},
+};
+let activeBU='all';
+function pd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function fmt(d){return d.toISOString().slice(0,10);}
+function dd(a,b){return Math.round((b-a)/864e5);}
+function dim(y,m){return new Date(y,m+1,0).getDate();}
+function dw(){return ZL[zi].dw;}
+function tw(){let w=0,c=new Date(PS);while(c<PE){w+=dim(c.getFullYear(),c.getMonth())*dw();c.setMonth(c.getMonth()+1);}return w;}
+function xp(s){const d=pd(s);let x=0,c=new Date(PS);while(c.getFullYear()<d.getFullYear()||(c.getFullYear()===d.getFullYear()&&c.getMonth()<d.getMonth())){x+=dim(c.getFullYear(),c.getMonth())*dw();c.setMonth(c.getMonth()+1);}x+=(d.getDate()-1)*dw();return Math.max(0,x);}
+function xpd(d){return xp(fmt(d));}
+function expandOccs(seg){
+  const segs=[];const s=pd(seg.s),e=pd(seg.e);const f=seg.freq;
+  if(!f)return[seg];
+  if(f==='2x_month'){let c=new Date(s.getFullYear(),s.getMonth(),1);while(c<=e){[[1,7],[15,21]].forEach(([sd,ed])=>{const ds=new Date(c.getFullYear(),c.getMonth(),sd);const de=new Date(c.getFullYear(),c.getMonth(),ed);if(ds>=s&&ds<=e)segs.push({t:'occ',s:fmt(ds),e:fmt(de),_orig:seg.t});});c.setMonth(c.getMonth()+1);}}
+  else if(f==='2x_month_blog'){let c=new Date(s.getFullYear(),s.getMonth(),1);while(c<=e){[[8,14],[22,28]].forEach(([sd,ed])=>{const ds=new Date(c.getFullYear(),c.getMonth(),sd);const de=new Date(c.getFullYear(),c.getMonth(),ed);if(ds>=s&&ds<=e)segs.push({t:'occ',s:fmt(ds),e:fmt(de),_orig:seg.t});});c.setMonth(c.getMonth()+1);}}
+  else if(f==='monthly'){let c=new Date(s.getFullYear(),s.getMonth(),1);while(c<=e){const ds=new Date(c.getFullYear(),c.getMonth(),1);const de=new Date(c.getFullYear(),c.getMonth(),7);if(ds>=s&&ds<=e)segs.push({t:'occ',s:fmt(ds),e:fmt(de),_orig:seg.t});c.setMonth(c.getMonth()+1);}}
+  else if(f==='quarterly'){let c=new Date(s.getFullYear(),s.getMonth(),1);let count=0;while(c<=e){if(count%3===0){const ds=new Date(c.getFullYear(),c.getMonth(),1);const de=new Date(c.getFullYear(),c.getMonth(),7);if(ds>=s&&ds<=e)segs.push({t:'occ',s:fmt(ds),e:fmt(de),_orig:seg.t});}count++;c.setMonth(c.getMonth()+1);}}
+  else if(f==='semestral'){let c=new Date(s.getFullYear(),s.getMonth(),1);let count=0;while(c<=e){if(count%6===0){const ds=new Date(c.getFullYear(),c.getMonth(),1);const de=new Date(c.getFullYear(),c.getMonth(),7);if(ds>=s&&ds<=e)segs.push({t:'occ',s:fmt(ds),e:fmt(de),_orig:seg.t});}count++;c.setMonth(c.getMonth()+1);}}
+  return segs.length?segs:[seg];
+}
+function expandSegs(task){const out=[];task.segs.forEach(seg=>{expandOccs(seg).forEach(s=>out.push(s));});return out;}
+let TASKS=[
+  // ── BUSINESS TRAVEL ──────────────────────────────────────────────────────
+  // Wave 1 (04-18 mai): Fundação — habilita tudo mais
+  // Wave 2 (19 mai-01 jun): Ganhos rápidos de visibilidade e base comercial
+  // Wave 3 (02-22 jun): Ativação de canais
+  // Wave 4 (23 jun+): Escala e recorrência
+  {G:'✈️ BUSINESS TRAVEL'},
+  {id:'bt01',bu:['corp'],n:'BT | Conteúdo Orgânico no LinkedIn',o:'',pri:'Alta — imediata',
+   wave:1,waveNote:'Visibilidade imediata, custo zero, impacto rápido',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-11',lbl:'Estratégia'},
+         {t:'run',s:'2026-05-12',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'bt02',bu:['corp'],n:'BT | ABM Lite (Nichos)',o:'',pri:'Alta — imediata',
+   wave:2,waveNote:'Geração de demanda qualificada — ativa base de leads existente',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Estratégia'},
+         {t:'run',s:'2026-06-02',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'bt03',bu:['corp'],n:'BT | Réguas de Nutrição (Base Geral, Alagev, etc.)',o:'',pri:'Alta — imediata',
+   wave:2,waveNote:'Ativa base existente com baixo esforço e alto retorno',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Estratégia'},
+         {t:'run',s:'2026-06-02',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'bt04',bu:['corp'],n:'BT | Premiações | Viagens Corporativas',o:'',pri:'Alta — imediata',
+   wave:2,waveNote:'Posicionamento de marca — datas fixas não podem ser perdidas',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Estudo e definição'},
+         {t:'occ',s:'2026-06-02',e:'2027-04-30',lbl:'Conforme calendário de eventos'}]},
+  {id:'bt05',bu:['corp'],n:'BT | Newsletter via e-mail',o:'',pri:'Alta — imediata',
+   wave:3,waveNote:'Nutri base e mantém marca viva — inicia mensal antes de escalar',
+   segs:[{t:'build',s:'2026-06-02',e:'2026-06-15',lbl:'Estruturação e testes'},
+         {t:'launch',s:'2026-06-16',e:'2026-08-15',lbl:'Mensal (2 meses)',freq:'monthly'},
+         {t:'run',s:'2026-08-16',e:'2027-04-30',lbl:'Quinzenal',freq:'2x_month'}]},
+  {id:'bt06',bu:['corp'],n:'BT | Estratégia de SEO/GEO',o:'',pri:'Alta',
+   wave:3,waveNote:'Resultado de médio prazo — começar logo para colher em 3-4 meses',
+   segs:[{t:'build',s:'2026-06-02',e:'2026-06-15',lbl:'Estratégia (2 sem)'},
+         {t:'run',s:'2026-06-16',e:'2027-04-30',lbl:'2 publicações/semana',freq:'2x_week'}]},
+  {id:'bt07',bu:['corp'],n:'BT | Tráfego Pago (MOFU/TOFU/BOFU/Remarketing/ABM Ads)',o:'',pri:'Alta',
+   wave:3,waveNote:'Amplifica ABM Lite — depende de estratégia e criativos prontos',
+   segs:[{t:'build',s:'2026-06-16',e:'2026-06-29',lbl:'Definição de estratégia'},
+         {t:'run',s:'2026-06-30',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'bt08',bu:['corp'],n:'BT | Revisão de Propostas',o:'',pri:'Prioridade máxima',
+   wave:1,waveNote:'Impacto direto em conversão — precisa estar pronto antes de ativar ABM',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-18',lbl:'Revisão inicial'},
+         {t:'occ',s:'2026-11-01',e:'2026-11-15',lbl:'Revisão semestral'}]},
+  {id:'bt09',bu:['corp'],n:'BT | Sales Enablement (Playbooks, Battlecards, Apresentações)',o:'',pri:'Alta',
+   wave:2,waveNote:'Apoia ABM e ciclo de vendas — ganho rápido para equipe comercial',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-29',lbl:'Criação'},
+         {t:'occ',s:'2026-11-01',e:'2026-11-15',lbl:'Revisão semestral'}]},
+  {id:'bt10',bu:['corp'],n:'BT | Porta-vozes / Liderança no LinkedIn',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-06-30',e:'2026-07-13',lbl:'Definição de estratégia'},
+         {t:'run',s:'2026-07-14',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'bt11',bu:['corp'],n:'BT | Estudo de Feiras, Eventos e Patrocínios',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-06-30',e:'2026-07-31',lbl:'Estudo e definição'},
+         {t:'occ',s:'2026-08-01',e:'2027-04-30',lbl:'Conforme calendário'}]},
+  {id:'bt12',bu:['corp'],n:'BT | Co-criação de Conteúdo (Clientes e Fornecedores)',o:'',pri:'Média',
+   segs:[{t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Mensal',freq:'monthly'}]},
+  {id:'bt13',bu:['corp'],n:'BT | Costa Brava Experience',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-08-15',lbl:'Criação do mídia kit'},
+         {t:'occ',s:'2026-08-16',e:'2027-04-30',lbl:'Conforme programação'}]},
+
+  // ── CS — BUSINESS TRAVEL ─────────────────────────────────────────────────
+  {G:'🤝 CS — BUSINESS TRAVEL'},
+  {id:'cs01',bu:['cs'],n:'CS BT | Revisão de Processos de Alertas de Viagem',o:'',pri:'Alta',
+   wave:2,waveNote:'Melhora experiência imediata do cliente — processo único rápido',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-05-31',lbl:'Processo único'}]},
+  {id:'cs02',bu:['cs'],n:'CS BT | Comunicação de Produtos e Processos',o:'',pri:'Alta',
+   segs:[{t:'run',s:'2026-06-01',e:'2027-04-30',lbl:'Mínimo 2x/mês',freq:'2x_month'}]},
+  {id:'cs03',bu:['cs'],n:'CS BT | Criação de Portfólio de Cases e Depoimentos',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-08-31',lbl:'Criação inicial'},
+         {t:'run',s:'2026-09-01',e:'2027-04-30',lbl:'Acompanhamento mensal',freq:'monthly'}]},
+  {id:'cs04',bu:['cs'],n:'CS BT | Análise de NPS e CSAT e Plano de Ação',o:'',pri:'Média',
+   segs:[{t:'occ',s:'2026-08-01',e:'2027-04-30',lbl:'Trimestral',freq:'quarterly'}]},
+  {id:'cs05',bu:['cs'],n:'CS BT | Ações de BID Avoidance',o:'',pri:'Baixa',
+   segs:[{t:'build',s:'2026-08-01',e:'2026-09-15',lbl:'Definição de estratégia'},
+         {t:'run',s:'2026-09-16',e:'2027-04-30',lbl:'Conforme demanda'}]},
+  {id:'cs06',bu:['cs'],n:'CS BT | Comitê de Clientes',o:'',pri:'Baixa',
+   segs:[{t:'build',s:'2026-09-01',e:'2026-10-31',lbl:'Definição de estratégia'},
+         {t:'occ',s:'2026-11-01',e:'2027-04-30',lbl:'Conforme calendário'}]},
+
+  // ── LIVE MARKETING ───────────────────────────────────────────────────────
+  {G:'🎪 LIVE MARKETING'},
+  {id:'lm01',bu:['live'],n:'LM | Conteúdo Orgânico no LinkedIn',o:'',pri:'Alta — imediata',
+   wave:1,waveNote:'Espelha BT — visibilidade imediata e custo zero',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-11',lbl:'Estratégia'},
+         {t:'run',s:'2026-05-12',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'lm02',bu:['live'],n:'LM | ABM Lite (Nichos)',o:'',pri:'Alta — imediata',
+   wave:2,waveNote:'Prospecção B2B qualificada — core do negócio LM',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Estratégia'},
+         {t:'run',s:'2026-06-02',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'lm03',bu:['live'],n:'LM | Réguas de Nutrição (Base Geral)',o:'',pri:'Alta — imediata',
+   wave:2,waveNote:'Ativa base existente — resultado imediato sem investimento extra',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Estratégia'},
+         {t:'run',s:'2026-06-02',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'lm04',bu:['live'],n:'LM | Premiações',o:'',pri:'Alta — imediata',
+   wave:2,waveNote:'Calendário fixo — perder datas tem custo alto de oportunidade',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Estudo e definição'},
+         {t:'occ',s:'2026-06-02',e:'2027-04-30',lbl:'Conforme calendário'}]},
+  {id:'lm05',bu:['live'],n:'LM | Newsletter via e-mail',o:'',pri:'Alta — imediata',
+   wave:3,waveNote:'Nutrição da base — escala quinzenal após validação mensal',
+   segs:[{t:'build',s:'2026-06-02',e:'2026-06-15',lbl:'Estruturação e testes'},
+         {t:'launch',s:'2026-06-16',e:'2026-08-15',lbl:'Mensal (2 meses)',freq:'monthly'},
+         {t:'run',s:'2026-08-16',e:'2027-04-30',lbl:'Quinzenal',freq:'2x_month'}]},
+  {id:'lm06',bu:['live'],n:'LM | Estratégia de SEO/GEO',o:'',pri:'Alta — imediata',
+   wave:3,waveNote:'Médio prazo — iniciar para colher resultados em Set/26',
+   segs:[{t:'build',s:'2026-06-02',e:'2026-06-15',lbl:'Estratégia (2 sem)'},
+         {t:'run',s:'2026-06-16',e:'2027-04-30',lbl:'2 publicações/semana',freq:'2x_week'}]},
+  {id:'lm07',bu:['live'],n:'LM | Tráfego Pago',o:'',pri:'Alta',
+   wave:3,waveNote:'Amplifica ABM Lite — depende de criativos e landing pages',
+   segs:[{t:'build',s:'2026-06-16',e:'2026-06-29',lbl:'Definição de estratégia'},
+         {t:'run',s:'2026-06-30',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'lm08',bu:['live'],n:'LM | Sales Enablement (Playbooks, Battlecards, Apresentações)',o:'',pri:'Alta',
+   wave:2,waveNote:'Apoia time comercial — retorno imediato em conversão',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-29',lbl:'Criação'},
+         {t:'occ',s:'2026-11-01',e:'2026-11-15',lbl:'Revisão semestral'}]},
+  {id:'lm09',bu:['live'],n:'LM | Porta-vozes / Liderança no LinkedIn',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-06-30',e:'2026-07-13',lbl:'Definição de estratégia'},
+         {t:'run',s:'2026-07-14',e:'2027-04-30',lbl:'Recorrente'}]},
+  {id:'lm10',bu:['live'],n:'LM | Estudo de Feiras, Eventos e Patrocínios',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-06-30',e:'2026-07-31',lbl:'Estudo e definição'},
+         {t:'occ',s:'2026-08-01',e:'2027-04-30',lbl:'Conforme calendário'}]},
+  {id:'lm11',bu:['live'],n:'LM | Costa Brava Experience + Mídia Kit',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-08-15',lbl:'Criação do mídia kit'},
+         {t:'occ',s:'2026-08-16',e:'2027-04-30',lbl:'Conforme programação'}]},
+  {id:'lm12',bu:['live'],n:'LM | Co-criação de Conteúdo (Clientes e Fornecedores)',o:'',pri:'Média',
+   segs:[{t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Mensal',freq:'monthly'}]},
+  {id:'cs_lm01',bu:['cs'],n:'CS LM | Comunicação de Produtos e Processos',o:'',pri:'Média',
+   segs:[{t:'run',s:'2026-06-01',e:'2027-04-30',lbl:'Mínimo 2x/mês',freq:'2x_month'}]},
+  {id:'cs_lm02',bu:['cs'],n:'CS LM | Análise de NPS e CSAT e Plano de Ação',o:'',pri:'Média',
+   segs:[{t:'occ',s:'2026-08-01',e:'2027-04-30',lbl:'Trimestral',freq:'quarterly'}]},
+  {id:'cs_lm03',bu:['cs'],n:'CS LM | Criação de Portfólio de Cases e Depoimentos',o:'',pri:'Alta',
+   wave:2,waveNote:'Prova social — aceleradora de vendas, pode iniciar com casos existentes',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-30',lbl:'Criação inicial'},
+         {t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Conforme demanda'}]},
+
+  // ── YOU BY COSTA BRAVA ───────────────────────────────────────────────────
+  {G:'✨ YOU BY COSTA BRAVA'},
+  {id:'yo01',bu:['you'],n:'YOU | Revisar Estratégia de Conteúdos Orgânicos',o:'',pri:'Alta — imediata',
+   wave:1,waveNote:'Base para todos os canais YOU — precisa vir primeiro',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-18',lbl:'Processo único'}]},
+  {id:'yo02',bu:['you'],n:'YOU | Revisar Estratégia de Conteúdos para E-mail MKT',o:'',pri:'Alta',
+   wave:2,waveNote:'Canal de maior conversão no segmento luxo — ativar logo',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-05-31',lbl:'Revisão de estratégia'},
+         {t:'run',s:'2026-06-01',e:'2027-04-30',lbl:'Envios semanais',freq:'weekly'}]},
+  {id:'yo03',bu:['you'],n:'YOU | Catálogo Digital de Destinos por Estilo de Viagem',o:'',pri:'Alta',
+   wave:2,waveNote:'Asset comercial central — suporte direto a propostas e vendas',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-30',lbl:'Criação'},
+         {t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Alimentação conforme demanda'}]},
+  {id:'yo04',bu:['you'],n:'YOU | Revisão / Criação de Materiais e Comunicações de Venda',o:'',pri:'Alta',
+   wave:2,waveNote:'Impacto direto em fechamento — cresce conversão sem novos leads',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-30',lbl:'Criação'},
+         {t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Alimentação conforme demanda'}]},
+  {id:'yo05',bu:['you'],n:'YOU | Revisar / Criar Estratégia de Crosseling (B2B2C)',o:'',pri:'Alta',
+   wave:3,waveNote:'Expansão de receita em base existente — alto ROI',
+   segs:[{t:'build',s:'2026-06-02',e:'2026-06-30',lbl:'Processo único'}]},
+  {id:'yo06',bu:['you'],n:'YOU | Estratégia de SEO/GEO',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-07-14',lbl:'Estratégia (2 sem)'},
+         {t:'run',s:'2026-07-15',e:'2027-04-30',lbl:'2 publicações/semana',freq:'2x_week'}]},
+  {id:'yo07',bu:['you'],n:'YOU | Mapeamento de Eventos / Parceiros Regionais',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-08-15',lbl:'Definição de estratégia'},
+         {t:'occ',s:'2026-08-16',e:'2027-04-30',lbl:'Conforme calendário'}]},
+  {id:'yo08',bu:['you'],n:'YOU | Planejamento de Ações de Relacionamento',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-06-01',e:'2026-06-30',lbl:'Criação do planejamento'},
+         {t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Recorrente conforme demanda'}]},
+  {id:'yo09',bu:['you'],n:'YOU | Co-criação de Conteúdos com Fornecedores',o:'',pri:'Média',
+   segs:[{t:'run',s:'2026-07-01',e:'2027-04-30',lbl:'Mensal',freq:'monthly'}]},
+  {id:'yo10',bu:['you'],n:'YOU | Criar Programa de Cashback',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-08-01',e:'2026-09-15',lbl:'Criação'},
+         {t:'run',s:'2026-09-16',e:'2027-04-30',lbl:'2x/mês',freq:'2x_month'}]},
+  {id:'yo11',bu:['you'],n:'YOU | Diretório de Depoimentos de Clientes',o:'',pri:'Baixa',
+   segs:[{t:'build',s:'2026-08-01',e:'2026-09-30',lbl:'Criação'},
+         {t:'run',s:'2026-10-01',e:'2027-04-30',lbl:'Alimentação conforme demanda'}]},
+  {id:'yo12',bu:['you'],n:'YOU | Estudo de Microinfluenciadores (Luxo/Lifestyle/Local)',o:'',pri:'Baixa',
+   segs:[{t:'build',s:'2026-09-01',e:'2026-09-30',lbl:'Processo único'}]},
+  {id:'yo13',bu:['you'],n:'YOU | Revisar Opções de Kit de Viagem',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-07-31',lbl:'Processo único'}]},
+  {id:'yo14',bu:['you'],n:'YOU | Remodelar Produto Vale-viagem',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-07-31',lbl:'Processo único'}]},
+
+  // ── CI / ENDOMARKETING ───────────────────────────────────────────────────
+  {G:'📣 CI / ENDOMARKETING'},
+  {id:'ci01',bu:['endo'],n:'CI | Revisão do Plano Geral de CI e Endomarketing',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-31',lbl:'Processo único'}]},
+  {id:'ci02',bu:['endo'],n:'CI | Revisão dos Canais de Comunicação (Diário, LigaNews, CBTrends)',o:'',pri:'Alta',
+   wave:1,waveNote:'Infra interna — habilita endomkt e comunicação de lançamentos',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-31',lbl:'Processo único'}]},
+
+  // ── TECHHUB ──────────────────────────────────────────────────────────────
+  {G:'🔧 TECHHUB'},
+  {id:'th01',bu:['tech'],n:'TechHub | Apresentação Charlie Bravo',o:'',pri:'Alta',
+   wave:1,waveNote:'Base comunicacional do produto — habilita plano de comunicação',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-18',lbl:'Processo único'}]},
+  {id:'th02',bu:['tech'],n:'TechHub | Plano de Comunicação Charlie Bravo',o:'',pri:'Alta',
+   wave:2,waveNote:'Depende da apresentação — sequência natural',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-06-01',lbl:'Processo único'}]},
+  {id:'th03',bu:['tech'],n:'TechHub | Diretório de Tutoriais',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-06-02',e:'2026-07-31',lbl:'Criação'},
+         {t:'run',s:'2026-08-01',e:'2027-04-30',lbl:'Alimentação conforme demanda'}]},
+
+  // ── GERAL ─────────────────────────────────────────────────────────────────
+  {G:'🌐 GERAL'},
+  {id:'ge01',bu:['geral'],n:'Conclusão / Organização do CRM e RD Marketing',o:'',pri:'Em andamento',
+   wave:1,waveNote:'Infraestrutura base — tudo depende do CRM funcionando',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-06-15',lbl:'Em andamento'}]},
+  {id:'ge02',bu:['geral'],n:'Revisar Calendário de Datas Comemorativas',o:'',pri:'Alta',
+   wave:1,waveNote:'Quick win — garante oportunidades de comunicação não perdidas',
+   segs:[{t:'build',s:'2026-05-04',e:'2026-05-11',lbl:'Processo único'}]},
+  {id:'ge03',bu:['geral'],n:'Revisão Estrutural do Site Costa Brava',o:'',pri:'Alta',
+   wave:2,waveNote:'Suporta SEO e conversão — urgente mas depende de briefing inicial',
+   segs:[{t:'build',s:'2026-05-19',e:'2026-07-15',lbl:'Processo único'}]},
+  {id:'ge04',bu:['geral'],n:'Criação de Dashboard Geral de MKT',o:'',pri:'Alta',
+   wave:3,waveNote:'Gestão baseada em dados — faz sentido após canais ativos',
+   segs:[{t:'build',s:'2026-06-16',e:'2026-07-31',lbl:'Processo único'}]},
+  {id:'ge05',bu:['geral'],n:'Imprensa | Envio de Press Release',o:'',pri:'Em andamento',
+   segs:[{t:'run',s:'2026-05-04',e:'2027-04-30',lbl:'2 pautas/mês',freq:'2x_month'}]},
+  {id:'ge06',bu:['geral'],n:'Revisão da Estratégia de Crosseling',o:'',pri:'Média',
+   segs:[{t:'build',s:'2026-07-01',e:'2026-07-31',lbl:'Processo único'}]},
+];
+function taskMatch(t,bu){if(bu==='all')return true;return t.bu&&t.bu.includes(bu);}
+function visibleTasks(){const out=[];let i=0;while(i<TASKS.length){if(TASKS[i].G){const sub=[];let j=i+1;while(j<TASKS.length&&!TASKS[j].G){if(taskMatch(TASKS[j],activeBU))sub.push(TASKS[j]);j++;}if(sub.length){out.push(TASKS[i]);sub.forEach(t=>out.push(t));}i=j;}else{i++;}}return out;}
+function buBadges(bus){if(activeBU!=='all')return'';if(bus.includes('all'))return'<span class="bb all">ALL</span>';return bus.map(b=>`<span class="bb ${b}">${b.toUpperCase()}</span>`).join('');}
+function setBU(bu){activeBU=bu;document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('active',b.dataset.bu===bu));renderHeader();renderTasks();updateAlerts();updateCounts();}
+function updateCounts(){const tasks=TASKS.filter(t=>!t.G);document.getElementById('cnt-all').textContent=tasks.length;['corp','live','you','endo','cs','tech','geral'].forEach(bu=>{const el=document.getElementById('cnt-'+bu);if(el)el.textContent=tasks.filter(t=>taskMatch(t,bu)).length;});}
+const MONTH_COLORS=['#0F2037','#1C3450','#0F2037','#1C3450','#0F2037','#1C3450','#0F2037','#1C3450','#0F2037','#1C3450','#0F2037','#1C3450'];
+const MONTH_NMS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function renderHeader(){
+  const W=tw();
+  const HDR_H=44;
+  document.getElementById('hdrInner').style.width=W+'px';
+  document.getElementById('hdrInner').style.height=HDR_H+'px';
+  const mRow=document.getElementById('hdrMonths');
+  const dRow=document.getElementById('hdrDays');
+  mRow.innerHTML='';
+  dRow.innerHTML='';
+  const now=new Date();now.setHours(0,0,0,0);
+  let mx=0;
+  const c=new Date(PS);
+  while(c<PE){
+    const yr=c.getFullYear(),mo=c.getMonth();
+    const days=dim(yr,mo);
+    const mw=days*dw();
+    const bg=MONTH_COLORS[mo%2];
+    // Month label row
+    const md=document.createElement('div');
+    md.className='hdr-month';
+    md.style.cssText=`left:${mx}px;width:${mw}px;height:24px;position:absolute;background:${bg};`;
+    md.textContent=MONTH_NMS[mo]+' '+String(yr).slice(2);
+    mRow.appendChild(md);
+    // Day cells row
+    const dayBg=mo%2===0?'#1A2E48':'#162840';
+    for(let day=1;day<=days;day++){
+      const dx=mx+(day-1)*dw();
+      const thisDate=new Date(yr,mo,day);
+      const dow=thisDate.getDay();
+      const isToday=thisDate.getTime()===now.getTime();
+      const isWeekend=(dow===0||dow===6);
+      const dd=document.createElement('div');
+      dd.className='hdr-day'+(isToday?' today-day':'')+(isWeekend?' weekend':'')+(day===1?' month-start':'');
+      dd.style.cssText=`left:${dx}px;width:${dw()}px;background:${isToday?'rgba(239,68,68,.18)':dayBg};`;
+      // Only show number if cell wide enough
+      if(dw()>=8) dd.textContent=day;
+      dRow.appendChild(dd);
+    }
+    mx+=mw;
+    c.setMonth(c.getMonth()+1);
+  }
+  document.getElementById('dateHdr').style.height=HDR_H+'px';
+}
+function renderTasks(){const nb=document.getElementById('namesBody'),cv=document.getElementById('canvas');nb.innerHTML='';cv.innerHTML='';const vis=visibleTasks(),W=tw();let y=0;const now=new Date();now.setHours(0,0,0,0);if(!vis.length){nb.innerHTML='<div class="empty-state"><span class="esi">🔍</span><p>Sem tarefas para esta BU</p></div>';cv.style.width=W+'px';cv.style.height='120px';return;}vis.forEach(task=>{if(task.G){const nr=document.createElement('div');nr.className='g-row';nr.style.height=GRP+'px';nr.textContent=task.G;nb.appendChild(nr);const cr=document.createElement('div');cr.className='canvas-g-row';cr.style.cssText=`top:${y}px;width:${W}px;height:${GRP}px;`;cv.appendChild(cr);y+=GRP;}else{const expandedSegs=expandSegs(task);const isActive=expandedSegs.some(s=>now>=pd(s.s)&&now<=pd(s.e));const hasAlert=task.segs.some(s=>{const d=dd(now,pd(s.s));return d>=0&&d<=14&&s.t==='launch';});const nr=document.createElement('div');nr.className='t-row'+(isActive?' is-active':'')+(hasAlert?' has-alert':'');nr.style.height=ROW+'px';const badges=activeBU==='all'?buBadges(task.bu):'';nr.innerHTML=`<span class="t-name" title="${task.n}">${task.n}</span>${badges}${isActive?'<span class="dot-g"></span>':''}${hasAlert?'<span class="dot-a" title="Lançamento em breve">⚠</span>':''}`;nb.appendChild(nr);const gl=document.createElement('div');gl.className='canvas-grid';gl.style.cssText=`top:${y+ROW-1}px;width:${W}px;`;cv.appendChild(gl);const cr=document.createElement('div');cr.className='canvas-t-row';cr.style.cssText=`top:${y}px;height:${ROW}px;width:${W}px;`;expandedSegs.forEach((seg,si)=>{
+        const sd=pd(seg.s),ed=pd(seg.e);
+        if(ed<PS||sd>=PE)return;
+        const x1=xp(seg.s),x2=xp(seg.e)+dw();
+        let bw=x2-x1;
+        const st=SC[seg.t]||SC.run;
+        const isNow=now>=sd&&now<=ed;
+        const isOcc=seg.t==='occ';
+        const bar=document.createElement('div');
+        bar.className='seg seg-'+seg.t+(isNow?' seg-now':'');
+
+        if(isOcc){
+          const occW=Math.min(bw,dw()*7-4);
+          bar.style.cssText=`left:${x1+2}px;width:${occW-4}px;background:${st.bg};border-color:${st.b};color:${st.t};border:1.5px solid ${st.b};border-radius:4px;`;
+          bar.title=`${task.n}\n📅 Ocorrência: ${seg.s.slice(5)} → ${seg.e.slice(5)}`;
+        } else {
+          bar.style.cssText=`left:${x1}px;width:${bw}px;background:${st.bg};border-color:${st.b};color:${st.t};position:absolute;`;
+          if(isNow)bar.style.boxShadow=`0 0 0 2px ${st.b}`;
+
+          // ── Left resize handle ──
+          const lh=document.createElement('div');
+          lh.className='seg-handle seg-handle-l';
+          lh.title='Arrastar para ajustar início';
+          bar.appendChild(lh);
+
+          // ── Label ──
+          const lbl=document.createElement('span');
+          lbl.className='seg-lbl';
+          lbl.textContent=bw>44?(seg.lbl||st.lbl):'';
+          bar.appendChild(lbl);
+
+          // ── Right resize handle ──
+          const rh=document.createElement('div');
+          rh.className='seg-handle seg-handle-r';
+          rh.title='Arrastar para ajustar fim';
+          bar.appendChild(rh);
+
+          bar.title=`${task.n}\n${st.lbl}: ${seg.s} → ${seg.e}\nArraste para mover · Handles para redimensionar`;
+
+          // Find raw seg index (skip occ expanded segs)
+          const rawSi=task.segs.indexOf(seg);
+          const rawSegRef=rawSi>=0?task.segs[rawSi]:null;
+
+          // ── DRAG TO MOVE ──
+          makeDraggable(bar, task, seg, rawSegRef, st);
+
+          // ── LEFT HANDLE drag ──
+          makeResizable(lh, bar, task, seg, rawSegRef, 'left', st);
+
+          // ── RIGHT HANDLE drag ──
+          makeResizable(rh, bar, task, seg, rawSegRef, 'right', st);
+
+          // Click to edit (only if not dragged)
+          bar.addEventListener('click',e=>{
+            if(bar._didDrag){bar._didDrag=false;return;}
+            e.stopPropagation();
+            if(rawSi>=0) openEdit(task,rawSi);
+          });
+        }
+        cr.appendChild(bar);
+      });cv.appendChild(cr);y+=ROW;}});cv.style.width=W+'px';cv.style.height=y+'px';let mx=0;const c=new Date(PS);while(c<PE){if(mx>0){const sep=document.createElement('div');sep.className='month-sep';sep.style.cssText=`left:${mx}px;height:${y}px;`;cv.appendChild(sep);}mx+=dim(c.getFullYear(),c.getMonth())*dw();c.setMonth(c.getMonth()+1);}// Today column highlight band
+  if(now>=PS&&now<PE){const todayX=xpd(now);const band=document.createElement('div');band.style.cssText=`position:absolute;left:${todayX}px;top:0;width:${dw()}px;height:${y}px;background:rgba(239,68,68,.06);pointer-events:none;z-index:1;`;cv.appendChild(band);}
+  if(now>=PS&&now<PE){const tx=xpd(now),tl=document.createElement('div');tl.className='today-line';tl.style.cssText=`left:${tx}px;height:${y}px;`;tl.innerHTML=`<div class="today-pip"></div>`;cv.appendChild(tl);}}
+function updateAlerts(){const now=new Date();now.setHours(0,0,0,0);const bar=document.getElementById('alertBar');const vis=visibleTasks().filter(t=>!t.G);const active=vis.filter(t=>expandSegs(t).some(s=>now>=pd(s.s)&&now<=pd(s.e)&&s.t!=='occ'));const upcoming=vis.filter(t=>t.segs.some(s=>{const d=dd(now,pd(s.s));return d>=0&&d<=14&&s.t==='launch';}));if(!active.length&&!upcoming.length){bar.className='alert-bar empty';bar.innerHTML='';return;}bar.className='alert-bar';let h='';if(active.length){h+=`<span class="ac green">● ${active.length} em execução</span>`;active.slice(0,3).forEach(t=>h+=`<span class="at">${t.n}</span>`);if(active.length>3)h+=`<span class="at">+${active.length-3}</span>`;}if(upcoming.length){h+=`<span class="ac amber">⚠ Lançamento próximo</span>`;upcoming.slice(0,3).forEach(t=>{const s=t.segs.find(s=>s.t==='launch'&&dd(now,pd(s.s))>=0&&dd(now,pd(s.s))<=14);if(!s)return;const d=dd(now,pd(s.s));h+=`<span class="at w">${t.n} — ${d===0?'hoje!':d+'d'}</span>`;});}bar.innerHTML=h;}
+function updateChip(){const d=new Date();document.getElementById('todayChip').textContent='Hoje: '+d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});}
+function cZoom(delta){const nz=zi+delta;if(nz<0||nz>=ZL.length)return;const wrap=document.getElementById('chartWrap'),ratio=wrap.scrollLeft/tw();zi=nz;document.getElementById('zLbl').textContent=ZL[zi].lbl;document.getElementById('bzOut').disabled=(zi===0);document.getElementById('bzIn').disabled=(zi===ZL.length-1);renderHeader();renderTasks();requestAnimationFrame(()=>{wrap.scrollLeft=ratio*tw();});}
+let ET,ESI;
+function openEdit(task,si){
+  const rawSegs=task.segs;
+  const seg=rawSegs[si>=0?si:0]||rawSegs[0];
+  ET=task; ESI=si>=0?si:0;
+  const st=SC[seg.t]||SC.run;
+  document.getElementById('epTitle').textContent=task.n;
+
+  const priColors={'Alta':'#DC2626','Alta — imediata':'#DC2626','Prioridade máxima':'#7C3AED','Média':'#D97706','Baixa':'#059669','Em andamento':'#2563EB'};
+  const priColor=priColors[task.pri]||'#64748B';
+
+  const OWNERS=['','Gerente de MKT','Coordenador de MKT','Analista de Conteúdo','Analista de Sales MKT','Designer','Equipe CS','Externo / Agência'];
+  let ownerOpts='';
+  OWNERS.forEach(function(o){ownerOpts+='<option value="'+o+'"'+(o===task.o?' selected':'')+'>'+( o||'— Selecione —')+'</option>';});
+
+  const SEG_TYPES=[{k:'build',lbl:'Build'},{k:'launch',lbl:'Launch'},{k:'run',lbl:'Run'},{k:'occ',lbl:'Ocorrência'}];
+  let typeOpts='';
+  SEG_TYPES.forEach(function(tt){typeOpts+='<option value="'+tt.k+'"'+(tt.k===seg.t?' selected':'')+'>'+tt.lbl+'</option>';});
+
+  const FREQS=[
+    {k:'',lbl:'Sem recorrência'},{k:'2x_week',lbl:'2x semana'},
+    {k:'2x_month',lbl:'Quinzenal (S1+S3)'},{k:'2x_month_blog',lbl:'2x/mês blog (S2+S4)'},
+    {k:'monthly',lbl:'Mensal'},{k:'quarterly',lbl:'Trimestral'},
+    {k:'semestral',lbl:'Semestral'},{k:'weekly',lbl:'Semanal'}
+  ];
+  let freqOpts='';
+  FREQS.forEach(function(f){freqOpts+='<option value="'+f.k+'"'+((seg.freq||'')===f.k?' selected':'')+'>'+f.lbl+'</option>';});
+
+  let segsHtml='';
+  rawSegs.forEach(function(s,i){
+    const ss=SC[s.t]||SC.run;
+    const isCur=(i===ESI);
+    segsHtml+='<div class="ep-seg-row'+(isCur?' cur':'')+'" onclick="openEdit(ET,'+i+')" style="cursor:pointer;">'
+      +'<span class="ep-seg-type" style="background:'+ss.bg+';color:'+ss.t+'">'+(s.lbl||ss.lbl)+(s.freq?' ↻':'')+'</span>'
+      +'<span class="ep-seg-dates">'+s.s+'<br>'+s.e+'</span>'
+      +'<span onclick="event.stopPropagation();deleteSeg('+i+')" title="Remover" style="margin-left:auto;cursor:pointer;color:#EF4444;font-size:14px;padding:0 4px;">✕</span>'
+      +'</div>';
+  });
+
+  // Add segment buttons — one per type
+  const addBtns=''
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;">'
+      +'<button onclick="addSegType(\'build\')" style="padding:5px 0;border-radius:5px;border:1.5px solid #FCD34D;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;cursor:pointer;">+ Build</button>'
+      +'<button onclick="addSegType(\'launch\')" style="padding:5px 0;border-radius:5px;border:1.5px solid #6EE7B7;background:#D1FAE5;color:#065F46;font-size:10px;font-weight:700;cursor:pointer;">+ Launch</button>'
+      +'<button onclick="addSegType(\'run\')" style="padding:5px 0;border-radius:5px;border:1.5px solid #93C5FD;background:#DBEAFE;color:#1E40AF;font-size:10px;font-weight:700;cursor:pointer;">+ Run</button>'
+      +'<button onclick="addSegType(\'occ\')" style="padding:5px 0;border-radius:5px;border:1.5px solid var(--cb-coral);background:var(--cb-coral-l);color:var(--cb-coral-d);font-size:10px;font-weight:700;cursor:pointer;">+ Ocorrência</button>'
+    +'</div>';
+
+  const html=''
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:2px;">'
+      +'<span class="ep-badge" style="background:'+st.bg+';color:'+st.t+';border-color:'+st.b+'">'+st.lbl+'</span>'
+      +'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+priColor+'20;color:'+priColor+';">'+(task.pri||'Sem prioridade')+'</span>'
+    +'</div>'
+    +'<div class="ep-field"><label>👤 Responsável</label>'
+      +'<select id="inOwner" style="border:1.5px solid var(--cb-rule);border-radius:7px;padding:7px 10px;font-size:12px;outline:none;background:#fff;">'+ownerOpts+'</select>'
+    +'</div>'
+    +'<div class="ep-field"><label>📝 Nome da Etapa</label>'
+      +'<input type="text" id="inLbl" value="'+(seg.lbl||'')+'" placeholder="Ex: Estratégia, Quinzenal…"/>'
+    +'</div>'
+    +'<div class="ep-field"><label>🎨 Tipo</label>'
+      +'<select id="inType" style="border:1.5px solid var(--cb-rule);border-radius:7px;padding:7px 10px;font-size:12px;outline:none;background:#fff;">'+typeOpts+'</select>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+      +'<div class="ep-field"><label>Data de Início</label><input type="date" id="inS" value="'+seg.s+'"/></div>'
+      +'<div class="ep-field"><label>Data de Fim</label><input type="date" id="inE" value="'+seg.e+'"/></div>'
+    +'</div>'
+    +'<div class="ep-field"><label>🔁 Recorrência</label>'
+      +'<select id="inFreq" style="border:1.5px solid var(--cb-rule);border-radius:7px;padding:7px 10px;font-size:12px;outline:none;background:#fff;">'+freqOpts+'</select>'
+    +'</div>'
+    +'<div class="ep-segs">'
+      +'<div class="ep-segs-title" style="margin-bottom:4px;">Etapas da Atividade</div>'
+      +segsHtml
+      +addBtns
+    +'</div>'
+    +'<div class="ep-actions">'
+      +'<button class="btn-save" onclick="saveEdit()">Salvar</button>'
+      +'<button class="btn-can" onclick="closeEdit()">Cancelar</button>'
+    +'</div>';
+
+  document.getElementById('epBody').innerHTML=html;
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('editOv').classList.add('open');
+}
+
+function saveEdit(){
+  const s=document.getElementById('inS').value;
+  const e=document.getElementById('inE').value;
+  const owner=document.getElementById('inOwner').value;
+  const lbl=document.getElementById('inLbl').value;
+  const type=document.getElementById('inType').value;
+  const freq=document.getElementById('inFreq').value;
+  if(!s||!e){alert('Preencha as duas datas.');return;}
+  if(s>e){alert('Início não pode ser depois do fim.');return;}
+  ET.segs[ESI].s=s;
+  ET.segs[ESI].e=e;
+  ET.segs[ESI].t=type;
+  ET.segs[ESI].lbl=lbl;
+  ET.segs[ESI].freq=freq||undefined;
+  ET.o=owner;
+  closeEdit();renderTasks();updateAlerts();
+}
+
+function addSeg(){addSegType('run');}
+function addSegType(type){
+  const SC_LBLS={build:'Estratégia/Build',launch:'Launch',run:'Recorrente',occ:'Ocorrência'};
+  const lastSeg=ET.segs[ET.segs.length-1];
+  const newStart=lastSeg?lastSeg.e:'2026-05-04';
+  ET.segs.push({t:type,s:newStart,e:newStart,lbl:SC_LBLS[type]||type});
+  openEdit(ET,ET.segs.length-1);
+}
+
+function deleteSeg(i){
+  if(ET.segs.length<=1){alert('A atividade precisa ter pelo menos uma etapa.');return;}
+  ET.segs.splice(i,1);
+  const newSi=Math.min(i,ET.segs.length-1);
+  openEdit(ET,newSi);
+}
+function closeEdit(){document.getElementById('editPanel').classList.remove('open');document.getElementById('editOv').classList.remove('open');}
+let currentView='gantt';
+const VIEWS={gantt:'vGantt',raci:'vRaci',visao:'vVisao',equipe:'vEquipe',fases:'vFases',cadencia:'vCadencia',maturidade:'vMaturidade'};
+function setView(v){currentView=v;document.querySelectorAll('.view-page').forEach(el=>el.classList.remove('active'));document.getElementById(VIEWS[v]).classList.add('active');document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+v+"'"))t.classList.add('active');});document.getElementById('ganttControls').style.display=(v==='gantt')?'flex':'none';if(v==='raci')buildRaciTable();if(v==='visao')buildRoadmapTable();}
+let roadmapBuilt=false;
+function buildRoadmapTable(){if(roadmapBuilt)return;roadmapBuilt=true;const months=[{n:'Mai',y:2026,c:'#0F2037'},{n:'Jun',y:2026,c:'#1C3450'},{n:'Jul',y:2026,c:'#0F2037'},{n:'Ago',y:2026,c:'#1C3450'},{n:'Set',y:2026,c:'#0F2037'},{n:'Out',y:2026,c:'#1C3450'},{n:'Nov',y:2026,c:'#0F2037'},{n:'Dez',y:2026,c:'#1C3450'},{n:'Jan',y:2027,c:'#0F2037'},{n:'Fev',y:2027,c:'#1C3450'},{n:'Mar',y:2027,c:'#0F2037'},{n:'Abr',y:2027,c:'#1C3450'}];function getCell(task,mi){const md=new Date(months[mi].y,['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].indexOf(months[mi].n),1);const me=new Date(md.getFullYear(),md.getMonth()+1,0);const rawSegs=task.segs;let cells=['','','',''];rawSegs.forEach(seg=>{const expanded=expandOccs(seg);expanded.forEach(es=>{const sd=pd(es.s),ed=pd(es.e);if(ed<md||sd>me)return;for(let w=0;w<4;w++){const ws=new Date(md.getFullYear(),md.getMonth(),w*7+1);const we=new Date(md.getFullYear(),md.getMonth(),Math.min((w+1)*7,me.getDate()));if(sd<=we&&ed>=ws){const t=es.t;cells[w]=t==='occ'?'occ':(cells[w]||t);}}});});return cells;}let h='<table class="roadmap-table"><thead>';h+=`<tr><th class="lbl-col">Iniciativa</th>`;months.forEach(m=>{h+=`<th colspan="4" style="background:${m.c};">${m.n}'${String(m.y).slice(2)}</th>`;});h+=`</tr><tr><th class="lbl-week"></th>`;months.forEach((_,mi)=>{['S1','S2','S3','S4'].forEach((w,wi)=>{h+=`<th class="${wi===3?'month-end':''}" style="background:${mi%2===0?'#243B55':'#1C3450'}">${w}</th>`;});});h+='</tr></thead><tbody>';const taskGroups=[];let curGroup=null;TASKS.forEach(t=>{if(t.G){curGroup={g:t.G,tasks:[]};taskGroups.push(curGroup);}else if(curGroup){curGroup.tasks.push(t);}});taskGroups.forEach(grp=>{h+=`<tr class="cat-row"><td>${grp.g}</td><td colspan="${months.length*4}"></td></tr>`;grp.tasks.forEach(task=>{h+=`<tr class="data-row"><td class="row-label">${task.n}</td>`;months.forEach((m,mi)=>{const cells=getCell(task,mi);cells.forEach((c,wi)=>{const mend=wi===3?' m-end':'';let inner='';if(c==='build')inner=`<span class="cell-bar bar-build">B</span>`;else if(c==='launch')inner=`<span class="cell-bar bar-launch">L</span>`;else if(c==='run')inner=`<span class="cell-bar bar-run">▬</span>`;else if(c==='occ')inner=`<span class="bar-occ-sm"></span>`;h+=`<td class="month-cell${mend}">${inner}</td>`;});});h+='</tr>';});});h+='</tbody></table>';document.getElementById('roadmapWrap').innerHTML=h;}
+const RACI_COLS=['Carlos','Muriel','Bianca','Marina','Analista 1 (Content)','Analista 2 (Sales)','Vendas BT','Vendas LM','CS BT','CS LM','YOU','LM OPS','Fornecedores','Tecnologia','RH','Lucas (Externo)','PR / Agência MKT','Freela','RD Station','Enriq. Dados','Adobe Stock','Creative Cloud','Lovable','Capcut'];
+const RACI_COL_GROUPS=[{lbl:'Equipe de MKT',cols:[0,1,2,3,4,5],color:'#1A3C6E',light:'#EBF0F8'},{lbl:'Áreas Parceiras',cols:[6,7,8,9,10,11,12,13,14],color:'#166534',light:'#DCFCE7'},{lbl:'Recursos Externos',cols:[15,16,17],color:'#B45309',light:'#FDF3E3'},{lbl:'Ferramentas',cols:[18,19,20,21,22,23],color:'#6B3FA0',light:'#F3EEF9'}];
+const RACI_DATA=[{g:'1. AQUISIÇÃO DE CLIENTES'},{section:'SEO e GEO'},{a:'Definição de Estratégia para cada BU',v:['I','A/C','R','','','','','','','','','','','','','R','','','','','','','','']},{a:'Ajustes e melhorias técnicos',v:['I','A','A','','','','','','','','','','','','','R','R','','','','','','','']},{a:'Criação de Conteúdo para blog',v:['','I','A','','R','R','I','I','','','I','','','','','','','','','','X','','','']},{a:'Backlinks',v:['','C/I','C/I','','','','','','','','','','','','','','R','','','','','','','']},{a:'Report',v:['I','A','A','','','','','','','','','','','','','R','','','','','','','','']},{section:'Gestão RD Station MKT e CRM'},{a:'Definição de escopo de trabalho',v:['A/I','R','R','','','C','R','R','','','R','','','','','R','','','','','','','','']},{a:'Enriquecimento de dados',v:['I','R','R','','','I','R','R','','','R','','','','','R','','','X','','','','','']},{a:'Automações e melhoria contínua',v:['I','A','R/A','','','R','R','R','','','R','','','C','','R','','','','X','','','','']},{section:'Awareness Ads (TOFU)'},{a:'Estratégia para cada BU (BT / LM)',v:['A','R/A','R','','','','I','I','','','','','','','','C','R','','','','','','','']},{a:'Criativos e LPs',v:['','R','R','R','','R','I','I','','','','','','','','C','R','','','','X','X','','']},{a:'Gestão de tráfego',v:['','A','A','','','','I','I','','','','','','','','','R','','','X','','','','']},{section:'PR e Assessoria de Imprensa'},{a:'Definição de Estratégia',v:['A','R','R','','C','','C','C','C','C','C','','','C','','','','','','','','','','']},{a:'Produção de pautas / releases',v:['A','A/C','A/C','','C','','C','C','C','C','C','','','C','','R','','','','','','','','']},{a:'Interface com portais / imprensa',v:['','I','I','','','','','','','','','','','','','R','','','','','','','','']},{a:'Participação em entrevistas',v:['R','C','C','','','','R','R','','','R','','','','','R','','','','','','','','']},{a:'Report',v:['I','A/I','A/I','','','','','','','','','','','','','R','','','','','','','','']},{section:'Patrocínio e Anúncios'},{a:'Estudo e validação de oportunidades',v:['A','R','R','','','C','','','','','','','','','','','','','','','','','','']},{a:'Conteúdo / Criativos',v:['A','A','A','R','','R','','','','','','','','','','','','','','','X','X','','']},{section:'Social Orgânico'},{a:'Definição de Estratégia para cada BU',v:['A/I','R/A','R','','I','I','R','R','','','R','','','','','R','R','','','','','','','']},{a:'Calendário de publicações',v:['','A','R','','R','R','','','','','','','','','','','','','','','','','','']},{a:'Produção do conteúdo',v:['','A/I','A','','R','R','','','','','','','','','','','','','','','','','','']},{a:'Criativo',v:['','A/I','A','R','C','C','','','','','','','','','','C','R','','','','X','X','X','X']},{a:'Report',v:['','','A','R','I','I','','','','','','','','','','C','R','','','','','','','']},{section:'Porta-vozes e Liderança no LinkedIn'},{a:'Definição de Estratégia',v:['A/I','R/A','R','','','C','','','','','','','','','','R','','','','','','','','']},{a:'Suporte e seleção de conteúdos',v:['A/I','R','C','','','','R','','','','','','','','','R','','','','','','','','']},{a:'Interação e conexões',v:['A/I','A/C','R','R','','','R','','','','','','','','','R','','','','','','','','']},{a:'Produção do conteúdo / Criativo',v:['A/I','A','R/A','','','R','','','','','','','','','','C','R','','','','X','X','X','X']},{section:'ABM Lite / ABM'},{a:'Definição de Estratégia (LM e BT)',v:['A/I','R/A','R','','','C','','','','','','','','','','R','','','','','','','','']},{a:'Mapeamento e seleção de empresas alvo',v:['A/I','R','C','','','','R','','','','','','','','','R','','','','','','','','']},{a:'Criação de conteúdo / cases',v:['A/I','A/C','R','R','','','R','','','','','','','','','R','','','','','X','X','X','X']},{a:'Produção do conteúdo / Criativo',v:['A/I','A','R/A','','','R','','','','','','','','','','C','R','','','','','','','']},{section:'Feiras e Premiações'},{a:'Mapeamento e seleção',v:['R/A','R','R','','','C','R','R','','','R','','','','','R','','','','','','','','']},{a:'Operação',v:['I','R','R','','','R','R','','','','','R','','','','R','','','','','','','','']},{a:'Comunicação',v:['I','A/C','R','R','','R','R','','','','','','','','','R','','','','','','','','']},{a:'Report',v:['I','R','R','','','','','','','','','','','','','C','R','','','','','','','']},{g:'2. NUTRIÇÃO DE LEADS'},{section:'Nutrição de Leads'},{a:'Criação de estratégias e réguas por funil',v:['I','R','R','','','C','R','R','','','C','','','','','R','','','','','','','','']},{a:'Newsletters',v:['I','A','R/A','R','R','R','C','C','','','C','','','','','','','','','','','','','']},{a:'LPs',v:['I','A/C','R/A','R','','R','C','C','','','C','','','','','','R','','','','','','','']},{a:'Conteúdos ricos (Whitepapers e E-books)',v:['I','R/A','R/A','R','','R','C','C','','','C','','','','','C','?','','','','','','','']},{a:'Report',v:['I','R/A','R','','','','I','I','','','I','','','','','','','','','','','','','']},{section:'Ads (MOFU) / Remarketing'},{a:'Estratégia para cada BU (BT / LM)',v:['A','R/A','R','','','','I','I','','','','','','','','C','R','','','','','','','']},{a:'Criativos e LPs',v:['','R','R','R','','R','I','I','','','','','','','','C','R','','','','X','X','','']},{a:'Gestão de tráfego',v:['','A','A','','','','I','I','','','','','','','','','R','','','X','','','','']},{section:'Eventos Próprios e Webinars'},{a:'Mapeamento e seleção',v:['R/A','R','R','','','C','R','R','','','R','','','','','','','','','','','','','']},{a:'Operação',v:['I','R','R','','','R','R','','','','','R','','','','','','','','','','','','']},{a:'Comunicação',v:['I','A/C','R','R','','R','R','','','','','','','','','','','','','','','','','']},{a:'Captação de recursos',v:['R','R','R','R','','','','','','','','','R','','','','','','','','','','','']},{a:'Report',v:['I','R','R','','','','','','','','','','','','','','','','','','','','','']},{section:'Sales Enablement'},{a:'Battlecards e playbooks',v:['A','R','R','','','','R','R','','','R','','','','','R','','','','','','','','']},{a:'Produção e revisão de materiais',v:['A','R/A','R/A','R','','R','R','R','','','','R','','','','I','','','','','','','','']},{g:'3. COMUNICAÇÃO COM CLIENTES'},{section:'Comunicação com Clientes'},{a:'Envio de informativos e alertas',v:['I','I/C','I/C','','','','','','R','','','','','C','','','','','','','','','','']},{a:'Newsletters / Notícias de mercado',v:['I','R','R','R','R','','','','C','','','','','','','','','','','','','','','']},{a:'Novas features / Comunicação de produto',v:['I','R','R','R','','R','','','R','','','','','R','','','','','','','','','','']},{section:'Ações de Relacionamento'},{a:'Connects, Camps e Almoços',v:['A/I','R','R','','','R','','','R','','','','','','','','','','','','','','','']},{a:'Produção e envio de brindes',v:['I','R','R','R','R','','','','R','','','','','','','','','','','','','','','']},{a:'Análise de indicadores',v:['R','R','R','R','','','R','R','R','','','','','R','','','','','','','','','','']},{a:'Ações para Bid Avoidance',v:['I','R','R','','','','','','R','','','','','','','','','','','','','','','']},{g:'4. POTENCIALIZAÇÃO DE CLIENTES'},{section:'Potencialização'},{a:'Crosselling e upselling / ABM expansão',v:['A/I','R','R','','','','R','R','R','','','R','','','','R','','','','','','','','']},{a:'Programas de indicação',v:['I','R','R','R','R','','','','R','','','','','','','','','','','','','','','']},{a:'Depoimentos e Cases / Advocacy',v:['I','R','R','R','','R','R','R','R','','','R','','','','I','','','','','','','','']},{section:'CI e Endomarketing'},{a:'Definição de estratégia e calendário',v:['','R','R','','','','','','','','','','','','R','','','','','','','','','']},{a:'Produção e envio de comunicações',v:['','A','A','','R','','','','','','','','','','A','','','','','','','','','']},{a:'Execução de ações de Endomarketing',v:['','A','R/A','','R','','','','','','','','','','R/A','','','','','','','','','']}];
+let raciBuilt=false;
+function buildRaciTable(){if(raciBuilt)return;raciBuilt=true;const sel=document.getElementById('raciPerson');RACI_COLS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});renderRaciTable(RACI_DATA);}
+function filterRaci(){const search=(document.getElementById('raciSearch').value||'').toLowerCase().trim();const person=document.getElementById('raciPerson').value;const role=document.getElementById('raciRole').value;const pi=person?RACI_COLS.indexOf(person):-1;const filtered=RACI_DATA.filter(row=>{if(row.g||row.section)return true;if(search&&!row.a.toLowerCase().includes(search))return false;if(pi>=0&&role){return(row.v[pi]||'').toUpperCase().includes(role.toUpperCase());}else if(pi>=0){const cell=(row.v[pi]||'').trim();return cell!==''&&cell!=='_';}else if(role){return row.v.some(c=>(c||'').toUpperCase().includes(role.toUpperCase()));}return true;});const clean=[];for(let i=0;i<filtered.length;i++){if(filtered[i].section){let found=false;for(let j=i+1;j<filtered.length;j++){if(filtered[j].g||filtered[j].section)break;found=true;break;}if(found)clean.push(filtered[i]);}else{clean.push(filtered[i]);}}renderRaciTable(clean);}
+function cellStyle(val){if(!val||val==='')return'background:#FAFAFA;color:#9CA3AF;';const v=val.toUpperCase();if(v.includes('R')&&v.includes('A'))return'background:#E0F2FE;color:#0369A1;font-weight:800;';if(v.startsWith('R'))return'background:#D1FAE5;color:#065F46;font-weight:800;';if(v.startsWith('A'))return'background:#DBEAFE;color:#1E40AF;font-weight:800;';if(v.startsWith('C'))return'background:#FEF3C7;color:#92400E;font-weight:700;';if(v.startsWith('I'))return'background:#F3F4F6;color:#4B5563;font-weight:600;';if(v==='X')return'background:#EDE9FE;color:#5B21B6;font-weight:700;';return'background:#FAFAFA;color:#CBD5E1;';}
+function renderRaciTable(data){const wrap=document.getElementById('raciTable');const NC=RACI_COLS.length;const CW=72,LW=265,ROW=32,HDR=42;let totalW=LW+NC*CW+2;let html=`<div style="position:relative;min-width:${totalW}px;">`;html+=`<div style="position:sticky;top:0;z-index:20;display:flex;background:var(--cb-navy);border-bottom:2px solid var(--cb-coral);min-width:${totalW}px;">`;html+=`<div style="width:${LW}px;min-width:${LW}px;padding:0 14px;display:flex;align-items:flex-end;padding-bottom:6px;font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);position:sticky;left:0;background:var(--cb-navy);z-index:2;border-right:2px solid rgba(255,255,255,.1);">Atividade</div>`;RACI_COL_GROUPS.forEach(grp=>{grp.cols.forEach(ci=>{const name=RACI_COLS[ci];html+=`<div style="width:${CW}px;min-width:${CW}px;height:${HDR}px;display:flex;align-items:center;justify-content:center;background:${grp.light};border-right:1px solid ${grp.color}30;overflow:hidden;" title="${name}"><span style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:700;color:${grp.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:${CW-6}px;">${name}</span></div>`;});});html+=`</div>`;html+=`<div style="position:sticky;top:${HDR}px;z-index:19;display:flex;background:#F0EDF8;border-bottom:1px solid #D8D2E8;min-width:${totalW}px;">`;html+=`<div style="width:${LW}px;min-width:${LW}px;position:sticky;left:0;background:#F0EDF8;z-index:2;border-right:2px solid #C0B8D0;"></div>`;RACI_COL_GROUPS.forEach(grp=>{const w=grp.cols.length*CW;html+=`<div style="width:${w}px;min-width:${w}px;text-align:center;font-family:'Cabinet Grotesk',sans-serif;font-size:9.5px;font-weight:800;color:${grp.color};background:${grp.light};padding:3px 0;border-right:1px solid #D8D2E8;letter-spacing:.5px;">${grp.lbl}</div>`;});html+=`</div>`;data.forEach(row=>{if(row.g){html+=`<div style="display:flex;background:var(--cb-navy);min-width:${totalW}px;position:sticky;top:${HDR+22}px;z-index:18;"><div style="width:100%;padding:8px 14px;font-family:'Cabinet Grotesk',sans-serif;font-size:12px;font-weight:900;color:var(--cb-coral);letter-spacing:1px;text-transform:uppercase;">${row.g}</div></div>`;}else if(row.section){html+=`<div style="display:flex;background:#EEEAF4;border-bottom:1px solid #D8D2E8;min-width:${totalW}px;"><div style="width:${LW}px;min-width:${LW}px;padding:6px 14px;font-family:'Cabinet Grotesk',sans-serif;font-size:11px;font-weight:800;color:#4A4650;position:sticky;left:0;background:#EEEAF4;z-index:1;border-right:2px solid #C0B8D0;">${row.section}</div>${RACI_COLS.map(()=>`<div style="width:${CW}px;min-width:${CW}px;border-right:1px solid #E2DDE8;background:#EEEAF4;"></div>`).join('')}</div>`;}else{html+=`<div style="display:flex;min-width:${totalW}px;border-bottom:1px solid #F0EDF8;" onmouseenter="this.style.background='#FBF8F5'" onmouseleave="this.style.background=''">`;html+=`<div style="width:${LW}px;min-width:${LW}px;padding:0 8px 0 20px;display:flex;align-items:center;font-size:11.5px;color:#374151;height:${ROW}px;position:sticky;left:0;background:inherit;z-index:1;border-right:2px solid #E2DDE8;">${row.a}</div>`;RACI_COLS.forEach((_,ci)=>{const v=(row.v[ci]||'').trim();const grp=RACI_COL_GROUPS.find(g=>g.cols.includes(ci));const border=grp&&ci===grp.cols[grp.cols.length-1]?`border-right:2px solid ${grp.color}40;`:'border-right:1px solid #F0EDF8;';html+=`<div style="width:${CW}px;min-width:${CW}px;height:${ROW}px;display:flex;align-items:center;justify-content:center;${border}${cellStyle(v)}"><span style="font-size:11px;">${v||''}</span></div>`;});html+=`</div>`;}});html+=`</div>`;wrap.innerHTML=html;}
+
+// ═══════════════════════════════════════════════════════
+// DRAG & RESIZE ENGINE
+// ═══════════════════════════════════════════════════════
+
+// Convert canvas X pixel to date string
+function xToDate(x){
+  let rem=Math.max(0,x);
+  const c=new Date(PS);
+  while(c<PE){
+    const days=dim(c.getFullYear(),c.getMonth());
+    const mw=days*dw();
+    if(rem<mw){
+      const dayIdx=Math.round(rem/dw());
+      const d=new Date(c.getFullYear(),c.getMonth(),1+Math.min(dayIdx,days-1));
+      return fmt(d);
+    }
+    rem-=mw;
+    c.setMonth(c.getMonth()+1);
+  }
+  return fmt(new Date(PE.getTime()-864e5));
+}
+
+// Tooltip element
+let _tip=null;
+function showTip(text,e){
+  if(!_tip){_tip=document.createElement('div');_tip.className='seg-tooltip';document.body.appendChild(_tip);}
+  _tip.textContent=text;
+  _tip.style.display='block';
+  moveTip(e);
+}
+function moveTip(e){if(_tip){_tip.style.left=(e.clientX+14)+'px';_tip.style.top=(e.clientY-28)+'px';}}
+function hideTip(){if(_tip)_tip.style.display='none';}
+
+function fmtDMY(s){const[y,m,d]=s.split('-');return `${d}/${m}/${y}`;}
+
+function makeDraggable(bar, task, seg, rawSeg, st){
+  let startX, origLeft, origSStr, origEStr, origW;
+  bar.style.cursor='grab';
+
+  bar.addEventListener('mousedown', e=>{
+    if(e.target.classList.contains('seg-handle')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    bar._didDrag=false;
+    startX=e.clientX;
+    origLeft=parseFloat(bar.style.left)||0;
+    origW=parseFloat(bar.style.width)||0;
+    origSStr=seg.s;
+    origEStr=seg.e;
+    bar.classList.add('dragging');
+    bar.style.cursor='grabbing';
+
+    function onMove(e){
+      const dx=e.clientX-startX;
+      if(Math.abs(dx)>3) bar._didDrag=true;
+      const newLeft=Math.max(0,origLeft+dx);
+      const newRight=newLeft+origW;
+      const ns=xToDate(newLeft);
+      const ne=xToDate(newRight-dw());
+      bar.style.left=newLeft+'px';
+      showTip(`${fmtDMY(ns)} → ${fmtDMY(ne)}`, e);
+      moveTip(e);
+      // Live update seg dates
+      if(rawSeg){rawSeg.s=ns;rawSeg.e=ne;}
+      else{seg.s=ns;seg.e=ne;}
+      // Update label
+      const lbl=bar.querySelector('.seg-lbl');
+      if(lbl)lbl.textContent=origW>44?(seg.lbl||st.lbl):'';
+    }
+
+    function onUp(e){
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      bar.classList.remove('dragging');
+      bar.style.cursor='grab';
+      hideTip();
+      if(bar._didDrag){
+        const dx=e.clientX-startX;
+        const newLeft=Math.max(0,origLeft+dx);
+        const newRight=newLeft+origW;
+        const ns=xToDate(newLeft);
+        const ne=xToDate(newRight-dw());
+        if(rawSeg){rawSeg.s=ns;rawSeg.e=ne;}
+        else{seg.s=ns;seg.e=ne;}
+        renderTasks();
+        updateAlerts();
+      }
+    }
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+}
+
+function makeResizable(handle, bar, task, seg, rawSeg, side, st){
+  handle.addEventListener('mousedown', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    bar._didDrag=true;
+    const startX=e.clientX;
+    const origLeft=parseFloat(bar.style.left)||0;
+    const origW=parseFloat(bar.style.width)||0;
+
+    function onMove(e){
+      const dx=e.clientX-startX;
+      let newLeft=origLeft, newW=origW;
+      if(side==='left'){
+        newLeft=Math.max(0,origLeft+dx);
+        newW=Math.max(dw(),origW-dx);
+      } else {
+        newW=Math.max(dw(),origW+dx);
+      }
+      bar.style.left=newLeft+'px';
+      bar.style.width=newW+'px';
+      const ns=xToDate(newLeft);
+      const ne=xToDate(newLeft+newW-dw());
+      if(rawSeg){if(side==='left')rawSeg.s=ns;else rawSeg.e=ne;}
+      else{if(side==='left')seg.s=ns;else seg.e=ne;}
+      showTip(`${fmtDMY(ns)} → ${fmtDMY(ne)}`, e);
+      moveTip(e);
+    }
+
+    function onUp(e){
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      hideTip();
+      const newLeft=parseFloat(bar.style.left)||0;
+      const newW=parseFloat(bar.style.width)||0;
+      const ns=xToDate(newLeft);
+      const ne=xToDate(newLeft+newW-dw());
+      if(rawSeg){if(side==='left')rawSeg.s=ns;else rawSeg.e=ne;}
+      else{if(side==='left')seg.s=ns;else seg.e=ne;}
+      renderTasks();
+      updateAlerts();
+    }
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+}
+
+
+function openAddRow(){
+  const BUS=['corp','live','you','endo','all'];
+  const BU_NAMES={corp:'Business Travel',live:'Live Marketing',you:'YOU by CB',endo:'CI / Endo',all:'Geral / Todos'};
+  let busOpts='';
+  BUS.forEach(function(b){busOpts+='<option value="'+b+'">'+BU_NAMES[b]+'</option>';});
+
+  const groups=[];
+  TASKS.forEach(function(t){if(t.G)groups.push(t.G);});
+  let groupOpts='';
+  groups.forEach(function(g){groupOpts+='<option value="'+g+'">'+g+'</option>';});
+
+  const html=''
+    +'<div class="ep-field"><label>Nome da Atividade</label>'
+      +'<input type="text" id="newName" placeholder="Descreva a atividade…"/>'
+    +'</div>'
+    +'<div class="ep-field"><label>Grupo</label>'
+      +'<select id="newGroup">'+groupOpts+'</select>'
+    +'</div>'
+    +'<div class="ep-field"><label>BU</label>'
+      +'<select id="newBU">'+busOpts+'</select>'
+    +'</div>'
+    +'<div class="ep-field"><label>👤 Responsável</label>'
+      +'<select id="newOwner">'
+        +'<option value="">— Selecione —</option>'
+        +'<option>Gerente de MKT</option><option>Coordenador de MKT</option>'
+        +'<option>Analista de Conteúdo</option><option>Analista de Sales MKT</option>'
+        +'<option>Designer</option><option>Equipe CS</option><option>Externo / Agência</option>'
+      +'</select>'
+    +'</div>'
+    +'<div class="ep-field"><label>Prioridade</label>'
+      +'<select id="newPri">'
+        +'<option>Alta — imediata</option><option>Alta</option>'
+        +'<option>Média</option><option>Baixa</option><option>Em andamento</option>'
+      +'</select>'
+    +'</div>'
+    +'<div class="ep-field"><label>Nome da 1ª Etapa</label>'
+      +'<input type="text" id="newLbl" value="Estratégia" placeholder="Ex: Estratégia, Criação…"/>'
+    +'</div>'
+    +'<div class="ep-field"><label>Tipo</label>'
+      +'<select id="newType">'
+        +'<option value="build">Build</option><option value="launch">Launch</option>'
+        +'<option value="run">Run</option><option value="occ">Ocorrência</option>'
+      +'</select>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+      +'<div class="ep-field"><label>Data Início</label><input type="date" id="newS" value="2026-05-04"/></div>'
+      +'<div class="ep-field"><label>Data Fim</label><input type="date" id="newE" value="2026-05-31"/></div>'
+    +'</div>'
+    +'<div class="ep-actions">'
+      +'<button class="btn-save" onclick="confirmAddRow()">Criar</button>'
+      +'<button class="btn-can" onclick="closeEdit()">Cancelar</button>'
+    +'</div>';
+
+  document.getElementById('epTitle').textContent='➕ Nova Atividade';
+  document.getElementById('epBody').innerHTML=html;
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('editOv').classList.add('open');
+}
+
+function confirmAddRow(){
+  const name=document.getElementById('newName').value.trim();
+  if(!name){alert('Informe o nome da atividade.');return;}
+  const s=document.getElementById('newS').value;
+  const e=document.getElementById('newE').value;
+  if(!s||!e||s>e){alert('Datas inválidas.');return;}
+  const bu=document.getElementById('newBU').value;
+  const owner=document.getElementById('newOwner').value;
+  const pri=document.getElementById('newPri').value;
+  const lbl=document.getElementById('newLbl').value||'Etapa 1';
+  const type=document.getElementById('newType').value;
+  const groupName=document.getElementById('newGroup').value;
+  const newId='custom_'+Date.now();
+  const newTask={id:newId,bu:[bu],n:name,o:owner,pri:pri,segs:[{t:type,s:s,e:e,lbl:lbl}]};
+  let insertIdx=TASKS.length;
+  for(let i=0;i<TASKS.length;i++){
+    if(TASKS[i].G===groupName){
+      let j=i+1;
+      while(j<TASKS.length&&!TASKS[j].G)j++;
+      insertIdx=j;break;
+    }
+  }
+  TASKS.splice(insertIdx,0,newTask);
+  closeEdit();renderTasks();updateAlerts();updateCounts();
+}
+
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('bzOut').disabled=true;
+  document.getElementById('chartWrap').addEventListener('scroll',()=>{document.getElementById('namesBody').scrollTop=document.getElementById('chartWrap').scrollTop;});
+  renderHeader();renderTasks();updateAlerts();updateChip();updateCounts();
+  requestAnimationFrame(()=>{const wrap=document.getElementById('chartWrap'),now=new Date();if(now>=PS&&now<PE)wrap.scrollLeft=Math.max(0,xpd(now)-140);});
+  setInterval(()=>{renderTasks();updateAlerts();updateChip();},60000);
+});
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  SUPABASE SYNC LAYER                                                ║
+   ║  Carrega o estado do roadmap do Supabase ao abrir, e salva          ║
+   ║  automaticamente toda vez que TASKS ou RACI_DATA mudam.             ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function(){
+  const cfg = window.CB_SUPABASE || {};
+  const ready = cfg.URL && !cfg.URL.startsWith('COLE_AQUI') &&
+                cfg.ANON_KEY && !cfg.ANON_KEY.startsWith('COLE_AQUI') &&
+                window.supabase && typeof window.supabase.createClient === 'function';
+
+  // ── Status pill no topbar ────────────────────────────────────────────
+  function ensurePill(){
+    if (document.getElementById('cb-sync-pill')) return;
+    const pill = document.createElement('span');
+    pill.id = 'cb-sync-pill';
+    pill.className = 'cb-sync-pill';
+    pill.textContent = 'Iniciando…';
+    const host = document.querySelector('.topbar') || document.body;
+    host.appendChild(pill);
+  }
+  function setPill(text, kind){
+    const pill = document.getElementById('cb-sync-pill');
+    if (!pill) return;
+    pill.textContent = text;
+    pill.className = 'cb-sync-pill' + (kind ? ' '+kind : '');
+  }
+
+  if (!ready){
+    document.addEventListener('DOMContentLoaded', () => {
+      ensurePill();
+      setPill('Modo offline (configure Supabase)', 'err');
+      console.warn('[CB Sync] Supabase não configurado. Edite window.CB_SUPABASE no <head>.');
+    });
+    return;
+  }
+
+  const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY, {
+    auth: { persistSession: false }
+  });
+
+  // ── Helpers de sincronização ─────────────────────────────────────────
+  let saveTimer = null;
+  let pendingSave = false;
+  let suppressSave = false;          // true durante load remoto
+  let lastSerialized = '';
+  let realtimeChannel = null;
+
+  function snapshot(){
+    return JSON.stringify({ t: TASKS, r: RACI_DATA });
+  }
+
+  function scheduleSave(){
+    if (suppressSave) return;
+    const cur = snapshot();
+    if (cur === lastSerialized) return;
+    pendingSave = true;
+    setPill('Salvando…', 'saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(doSave, 700);
+  }
+
+  async function doSave(){
+    if (!pendingSave) return;
+    pendingSave = false;
+    const cur = snapshot();
+    try {
+      const { error } = await sb
+        .from('roadmap_state')
+        .update({
+          tasks: TASKS,
+          raci_data: RACI_DATA
+        })
+        .eq('id', cfg.ROW_ID || 'main');
+      if (error) throw error;
+      lastSerialized = cur;
+      setPill('Salvo na nuvem', 'ok');
+    } catch (e) {
+      console.error('[CB Sync] Erro ao salvar:', e);
+      setPill('Erro ao salvar — tentando de novo…', 'err');
+      pendingSave = true;
+      saveTimer = setTimeout(doSave, 3000);
+    }
+  }
+
+  function applyRemote(data){
+    if (!data) return false;
+    suppressSave = true;
+    try {
+      if (Array.isArray(data.tasks) && data.tasks.length){
+        TASKS.length = 0;
+        data.tasks.forEach(x => TASKS.push(x));
+      }
+      if (Array.isArray(data.raci_data) && data.raci_data.length){
+        RACI_DATA.length = 0;
+        data.raci_data.forEach(x => RACI_DATA.push(x));
+      }
+      // Re-render tudo
+      if (typeof renderHeader === 'function') renderHeader();
+      if (typeof renderTasks === 'function') renderTasks();
+      if (typeof updateAlerts === 'function') updateAlerts();
+      if (typeof updateCounts === 'function') updateCounts();
+      if (typeof raciBuilt !== 'undefined' && raciBuilt){
+        raciBuilt = false;
+        if (typeof buildRaciTable === 'function') buildRaciTable();
+      }
+      if (typeof roadmapBuilt !== 'undefined' && roadmapBuilt){
+        roadmapBuilt = false;
+        if (typeof buildRoadmapTable === 'function') buildRoadmapTable();
+      }
+      lastSerialized = snapshot();
+      return true;
+    } finally {
+      suppressSave = false;
+    }
+  }
+
+  async function loadRemote(){
+    setPill('Carregando…', 'saving');
+    try {
+      const { data, error } = await sb
+        .from('roadmap_state')
+        .select('tasks, raci_data, updated_at')
+        .eq('id', cfg.ROW_ID || 'main')
+        .single();
+      if (error) throw error;
+      const had = applyRemote(data);
+      // Se a linha existe mas está vazia (primeiro acesso), salva o estado atual
+      if (!had){
+        suppressSave = false;
+        pendingSave = true;
+        await doSave();
+      } else {
+        setPill('Sincronizado', 'ok');
+      }
+    } catch (e) {
+      console.error('[CB Sync] Erro ao carregar:', e);
+      setPill('Offline — usando dados locais', 'err');
+    }
+  }
+
+  function subscribeRealtime(){
+    try {
+      realtimeChannel = sb.channel('roadmap_state_changes')
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'roadmap_state', filter: 'id=eq.' + (cfg.ROW_ID || 'main') },
+          payload => {
+            // Ignorar se for nosso próprio save (compara serialized)
+            const incoming = JSON.stringify({ t: payload.new.tasks, r: payload.new.raci_data });
+            if (incoming === lastSerialized) return;
+            applyRemote(payload.new);
+            setPill('Atualizado por outra pessoa', 'ok');
+          })
+        .subscribe();
+    } catch(e){ console.warn('[CB Sync] Realtime indisponível:', e); }
+  }
+
+  // ── Hooks nas funções de edição existentes ───────────────────────────
+  function wrap(name){
+    const orig = window[name];
+    if (typeof orig !== 'function') return;
+    window[name] = function(){
+      const r = orig.apply(this, arguments);
+      scheduleSave();
+      return r;
+    };
+  }
+  function wrapWhenReady(){
+    ['saveEdit','confirmAddRow','deleteSeg','addSegType','addSeg'].forEach(wrap);
+
+    // Drag/resize alteram TASKS dentro de listeners — precisamos detectar
+    // mudanças após qualquer renderTasks. Wrap renderTasks para diff:
+    const origRender = window.renderTasks;
+    if (typeof origRender === 'function'){
+      window.renderTasks = function(){
+        const r = origRender.apply(this, arguments);
+        scheduleSave();
+        return r;
+      };
+    }
+  }
+
+  // ── Boot ────────────────────────────────────────────────────────────
+  function boot(){
+    ensurePill();
+    wrapWhenReady();
+    loadRemote().then(subscribeRealtime);
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  // Salva qualquer pendência ao fechar a aba
+  window.addEventListener('beforeunload', () => {
+    if (pendingSave) {
+      // navigator.sendBeacon não funciona com supabase-js — só log.
+      console.log('[CB Sync] Save pendente ao fechar.');
+    }
+  });
+})();
+</script>
+</body>
+</html>
