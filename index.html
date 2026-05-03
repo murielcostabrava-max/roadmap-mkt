@@ -1552,7 +1552,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   let realtimeChannel = null;
 
   function snapshot(){
-    return JSON.stringify({ t: TASKS, r: RACI_DATA });
+    return JSON.stringify({ t: TASKS, r: RACI_DATA, m: (window.TEAM||[]) });
   }
 
   function scheduleSave(){
@@ -1574,7 +1574,8 @@ document.addEventListener('DOMContentLoaded',()=>{
         .from('roadmap_state')
         .update({
           tasks: TASKS,
-          raci_data: RACI_DATA
+          raci_data: RACI_DATA,
+          team: window.TEAM || []
         })
         .eq('id', cfg.ROW_ID || 'main');
       if (error) throw error;
@@ -1599,6 +1600,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       if (Array.isArray(data.raci_data) && data.raci_data.length){
         RACI_DATA.length = 0;
         data.raci_data.forEach(x => RACI_DATA.push(x));
+      }
+      if (Array.isArray(data.team) && data.team.length){
+        window.TEAM = data.team.slice();
       }
       // Re-render tudo
       if (typeof renderHeader === 'function') renderHeader();
@@ -1625,7 +1629,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     try {
       const { data, error } = await sb
         .from('roadmap_state')
-        .select('tasks, raci_data, updated_at')
+        .select('tasks, raci_data, team, updated_at')
         .eq('id', cfg.ROW_ID || 'main')
         .single();
       if (error) throw error;
@@ -1705,6 +1709,338 @@ document.addEventListener('DOMContentLoaded',()=>{
       console.log('[CB Sync] Save pendente ao fechar.');
     }
   });
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 1 — PATCHES                                                   ║
+   ║  - DEFAULT_TEAM + window.TEAM                                       ║
+   ║  - Multi-select de responsáveis (chips)                             ║
+   ║  - Ocorrência editável (click handler + form)                       ║
+   ║  - Linha vermelha do hoje mais visível + label de data              ║
+   ║  - Botão de Backup (download JSON)                                  ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase1(){
+
+  // ── 1) CSS adicional ────────────────────────────────────────────────
+  const css = `
+.cb-chip-multi{display:flex;flex-wrap:wrap;gap:6px;border:1.5px solid var(--cb-rule);border-radius:8px;padding:7px 8px;min-height:40px;background:#fff;cursor:text;align-items:center;}
+.cb-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:#F0EDF8;color:#4A4650;font-size:11px;font-weight:600;border:1px solid #C0B8D0;}
+.cb-chip.ext{background:#FEF3C7;border-color:#FCD34D;color:#92400E;}
+.cb-chip-rm{cursor:pointer;font-size:14px;line-height:1;color:inherit;opacity:.55;}
+.cb-chip-rm:hover{opacity:1;}
+.cb-chip-add{padding:3px 10px;font-size:11px;color:var(--cb-ink2);background:transparent;border:1px dashed var(--cb-rule2);border-radius:999px;cursor:pointer;font-weight:500;}
+.cb-chip-add:hover{background:#FAFAFA;border-color:var(--cb-coral);color:var(--cb-coral-d);}
+.cb-pop{position:fixed;background:#fff;border:1.5px solid var(--cb-rule);border-radius:10px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:300;max-height:320px;overflow-y:auto;min-width:280px;}
+.cb-pop-item{padding:8px 10px;cursor:pointer;border-radius:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.cb-pop-item:hover{background:#FAFAFA;}
+.cb-pop-item.sel{background:#F0EDF8;}
+.cb-pop-item .info{display:flex;flex-direction:column;}
+.cb-pop-item .role{font-size:10px;color:var(--cb-ink3);font-weight:500;}
+.cb-pop-item .check{color:var(--cb-coral);font-weight:800;font-size:14px;display:none;}
+.cb-pop-item.sel .check{display:inline;}
+.cb-topbar-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 10px;border-radius:6px;cursor:pointer;font-family:'Epilogue',sans-serif;font-size:12px;font-weight:600;margin-left:8px;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+.cb-topbar-btn:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.4);}
+.today-line{box-shadow:0 0 8px rgba(239,68,68,.7),0 0 18px rgba(239,68,68,.3) !important;width:3px !important;animation:cb-today-pulse 2.4s ease-in-out infinite;z-index:50 !important;}
+@keyframes cb-today-pulse{0%,100%{box-shadow:0 0 8px rgba(239,68,68,.7),0 0 18px rgba(239,68,68,.3);}50%{box-shadow:0 0 14px rgba(239,68,68,1),0 0 26px rgba(239,68,68,.55);}}
+.today-lbl{font-size:10px !important;font-weight:800 !important;padding:3px 9px !important;letter-spacing:.5px !important;box-shadow:0 2px 8px rgba(239,68,68,.45);text-transform:uppercase;border-radius:5px !important;top:-26px !important;}
+.today-pip{width:10px !important;height:10px !important;margin-top:-5px !important;box-shadow:0 0 0 4px rgba(239,68,68,.22);}
+`;
+  const styleEl = document.createElement('style');
+  styleEl.id = 'cb-phase1-css';
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+
+  // ── 2) Default Team + globals ───────────────────────────────────────
+  const DEFAULT_TEAM = [
+    { id: 'muriel',  name: 'Muriel Teixeira', role: 'Gerente de Marketing',   active: true },
+    { id: 'bianca',  name: 'Bianca Cayres',   role: 'Coordenadora de MKT',    active: true },
+    { id: 'ana',     name: 'Ana Gimenes',     role: 'Analista de MKT',        active: true },
+    { id: 'beatriz', name: 'Beatriz Dutra',   role: 'Analista de MKT',        active: true },
+    { id: 'browwd',  name: 'Browwd',          role: 'Designers',              active: true, external: true },
+    { id: 'evva',    name: 'Evva',            role: 'Assessoria de Imprensa', active: true, external: true },
+    { id: 'loopers', name: 'Loopers',         role: 'Agência de MKT',         active: true, external: true }
+  ];
+  if (typeof window.TEAM === 'undefined' || !Array.isArray(window.TEAM) || window.TEAM.length === 0){
+    window.TEAM = DEFAULT_TEAM.slice();
+  }
+  window.cbGetTeam = () => Array.isArray(window.TEAM) ? window.TEAM : [];
+  window.cbFindMember = (id) => cbGetTeam().find(m => m.id === id);
+  window.cbOwnerLabel = (ids) => {
+    if (!ids || !ids.length) return '';
+    const team = cbGetTeam();
+    return ids.map(id => {
+      const m = team.find(x => x.id === id);
+      return m ? m.name : id;
+    }).join(', ');
+  };
+
+  // ── 3) Componente: chip multi-select ────────────────────────────────
+  // Cria um <div> que mostra chips das pessoas selecionadas + um botão "+ Adicionar".
+  // Clica no botão → abre um popover com a lista do TEAM. Toggle marca/desmarca.
+  // Retorna { node, getValues(), setValues(arr) }.
+  window.cbChipsMultiselect = function(initial){
+    const wrap = document.createElement('div');
+    wrap.className = 'cb-chip-multi';
+    let selected = Array.isArray(initial) ? initial.filter(Boolean) : [];
+
+    function render(){
+      wrap.innerHTML = '';
+      const team = cbGetTeam();
+      selected.forEach(id => {
+        const m = team.find(x => x.id === id);
+        if (!m) return;
+        const chip = document.createElement('span');
+        chip.className = 'cb-chip' + (m.external ? ' ext' : '');
+        chip.innerHTML = `${m.name}<span class="cb-chip-rm" title="Remover">×</span>`;
+        chip.querySelector('.cb-chip-rm').onclick = (e) => {
+          e.stopPropagation();
+          selected = selected.filter(x => x !== id);
+          render();
+        };
+        wrap.appendChild(chip);
+      });
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'cb-chip-add';
+      addBtn.textContent = selected.length ? '+ Adicionar' : '+ Selecionar responsáveis';
+      addBtn.onclick = (e) => {
+        e.stopPropagation();
+        openPopover(addBtn);
+      };
+      wrap.appendChild(addBtn);
+    }
+
+    function openPopover(anchor){
+      // Remove qualquer popover anterior
+      document.querySelectorAll('.cb-pop').forEach(p => p.remove());
+      const team = cbGetTeam();
+      const pop = document.createElement('div');
+      pop.className = 'cb-pop';
+      team.filter(m => m.active !== false).forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'cb-pop-item' + (selected.includes(m.id) ? ' sel' : '');
+        item.innerHTML = `
+          <div class="info">
+            <span>${m.name}</span>
+            <span class="role">${m.role || ''}${m.external ? ' • externo' : ''}</span>
+          </div>
+          <span class="check">✓</span>
+        `;
+        item.onclick = (e) => {
+          e.stopPropagation();
+          if (selected.includes(m.id)) {
+            selected = selected.filter(x => x !== m.id);
+          } else {
+            selected.push(m.id);
+          }
+          item.classList.toggle('sel');
+          render();
+        };
+        pop.appendChild(item);
+      });
+      document.body.appendChild(pop);
+      const rect = anchor.getBoundingClientRect();
+      pop.style.top = (rect.bottom + 4) + 'px';
+      pop.style.left = rect.left + 'px';
+      // Click outside to close
+      const closer = (ev) => {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('mousedown', closer, true);
+        }
+      };
+      setTimeout(() => document.addEventListener('mousedown', closer, true), 0);
+    }
+
+    render();
+    return {
+      node: wrap,
+      getValues: () => selected.slice(),
+      setValues: (arr) => { selected = (arr||[]).slice(); render(); }
+    };
+  };
+
+  // ── 4) Patch openEdit: usar multi-select pra owners + permitir occ ──
+  const _origOpenEdit = window.openEdit;
+  window.openEdit = function(task, si){
+    _origOpenEdit.call(this, task, si);
+    // Após render do form original, sobrescrevemos o campo de Responsável
+    const inOwner = document.getElementById('inOwner');
+    if (!inOwner) return;
+    // Cria o multi-select
+    const seg = task.segs[si >= 0 ? si : 0];
+    if (!seg) return;
+    const initial = Array.isArray(seg.owners) ? seg.owners
+                  : (task.o ? mapLegacyOwnerToIds(task.o) : []);
+    const chips = window.cbChipsMultiselect(initial);
+    chips.node.id = 'inOwnerMulti';
+    inOwner.parentElement.insertBefore(chips.node, inOwner);
+    inOwner.style.display = 'none';
+    // expose para saveEdit pegar
+    window._cbCurrentChips = chips;
+  };
+
+  function mapLegacyOwnerToIds(name){
+    if (!name) return [];
+    const team = cbGetTeam();
+    const found = team.find(m => m.name.toLowerCase() === name.toLowerCase());
+    return found ? [found.id] : [];
+  }
+
+  // ── 5) Patch saveEdit: salva owners no segmento ─────────────────────
+  // ET / ESI são variáveis script-level (let) — referenciadas diretamente.
+  const _origSaveEdit = window.saveEdit;
+  window.saveEdit = function(){
+    // Pega chips ANTES do save original (porque o orig fecha o panel)
+    const ids = window._cbCurrentChips ? window._cbCurrentChips.getValues() : null;
+    const targetTask = (typeof ET !== 'undefined') ? ET : null;
+    const targetSi   = (typeof ESI !== 'undefined') ? ESI : null;
+    _origSaveEdit.apply(this, arguments);
+    if (ids && targetTask && targetTask.segs && typeof targetSi === 'number'){
+      targetTask.segs[targetSi].owners = ids;
+      if (typeof renderTasks === 'function') renderTasks();
+    }
+    window._cbCurrentChips = null;
+  };
+
+  // ── 6) Patch addSegType: também garante owners=[] no novo seg ───────
+  const _origAddSegType = window.addSegType;
+  window.addSegType = function(type){
+    _origAddSegType.call(this, type);
+    if (typeof ET !== 'undefined' && ET && ET.segs){
+      const last = ET.segs[ET.segs.length-1];
+      if (last && !Array.isArray(last.owners)) last.owners = [];
+    }
+  };
+
+  // ── 7) Patch confirmAddRow: nova atividade aceita owners array ─────
+  const _origConfirmAddRow = window.confirmAddRow;
+  window.confirmAddRow = function(){
+    // O DOM original tem #newOwner (single select). Vamos ler dele OU do multi se substituímos.
+    // Para simplificar, deixamos o orig executar e depois ajustamos owners no novo task.
+    const newOwnerEl = document.getElementById('newOwner');
+    let preMulti = null;
+    if (window._cbAddRowChips){
+      preMulti = window._cbAddRowChips.getValues();
+    }
+    _origConfirmAddRow.apply(this, arguments);
+    // O último task adicionado é o que tem id começando com 'custom_' e foi inserido recente
+    const lastCustom = TASKS.filter(t => !t.G && typeof t.id === 'string' && t.id.startsWith('custom_'))
+      .sort((a,b) => (a.id < b.id ? 1 : -1))[0];
+    if (lastCustom && preMulti && preMulti.length){
+      lastCustom.segs[0].owners = preMulti;
+      lastCustom.o = ''; // limpa legacy
+      if (typeof renderTasks === 'function') renderTasks();
+    }
+    window._cbAddRowChips = null;
+  };
+
+  // ── 8) Patch openAddRow: troca select por multi-select ──────────────
+  const _origOpenAddRow = window.openAddRow;
+  window.openAddRow = function(){
+    _origOpenAddRow.apply(this, arguments);
+    const newOwner = document.getElementById('newOwner');
+    if (!newOwner) return;
+    const chips = window.cbChipsMultiselect([]);
+    chips.node.id = 'newOwnerMulti';
+    newOwner.parentElement.insertBefore(chips.node, newOwner);
+    newOwner.style.display = 'none';
+    window._cbAddRowChips = chips;
+  };
+
+  // ── 9) Today line — adicionar label de data ─────────────────────────
+  // Patch renderTasks para enriquecer a today-line após o render.
+  const _origRenderTasks = window.renderTasks;
+  window.renderTasks = function(){
+    const r = _origRenderTasks.apply(this, arguments);
+    try {
+      const tl = document.querySelector('#canvas .today-line');
+      if (tl && !tl.querySelector('.today-lbl')){
+        const lbl = document.createElement('div');
+        lbl.className = 'today-lbl';
+        const d = new Date();
+        const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        lbl.textContent = days[d.getDay()] + ' ' + String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+        tl.appendChild(lbl);
+      }
+      // Tooltip nas barras com responsáveis
+      document.querySelectorAll('#canvas .seg').forEach(bar => {
+        // pequeno e melhor — não vamos parsear; deixamos pra V2
+      });
+    } catch(e){ /* silent */ }
+    return r;
+  };
+
+  // ── 10) Click handler nas barras de Ocorrência ──────────────────────
+  // O original não adiciona click em barras occ. Vamos delegar via listener no canvas
+  // que detecta cliques em .seg-occ e abre openEdit do seg original.
+  document.addEventListener('click', function(e){
+    const bar = e.target.closest && e.target.closest('.seg-occ');
+    if (!bar) return;
+    if (bar._didDrag){ bar._didDrag = false; return; }
+    // Achar a row e o task associado
+    const cv = document.getElementById('canvas');
+    if (!cv || !cv.contains(bar)) return;
+    const rowEl = bar.parentElement; // canvas-t-row
+    const allRows = Array.from(cv.querySelectorAll('.canvas-t-row'));
+    const rowIdx = allRows.indexOf(rowEl);
+    if (rowIdx < 0) return;
+    // Match com vis tasks (não-G)
+    const visAll = (typeof visibleTasks === 'function') ? visibleTasks() : [];
+    const visTasks = visAll.filter(t => !t.G);
+    const task = visTasks[rowIdx];
+    if (!task) return;
+    // Encontrar o seg original que tem t==='occ' OU freq definido (recurring)
+    const occIdx = task.segs.findIndex(s => s.t === 'occ' || s.freq);
+    if (occIdx < 0) return;
+    e.stopPropagation();
+    if (typeof openEdit === 'function') openEdit(task, occIdx);
+  }, true);
+
+  // ── 11) Botão de Backup no topbar ───────────────────────────────────
+  function ensureBackupButton(){
+    if (document.getElementById('cb-backup-btn')) return;
+    const right = document.querySelector('.topbar-right');
+    if (!right) return;
+    const btn = document.createElement('button');
+    btn.id = 'cb-backup-btn';
+    btn.className = 'cb-topbar-btn';
+    btn.title = 'Baixar backup completo (JSON)';
+    btn.innerHTML = '💾 Backup';
+    btn.onclick = window.cbBackup;
+    // Inserir antes dos gantt-controls
+    right.insertBefore(btn, right.firstChild);
+  }
+
+  window.cbBackup = function(){
+    const data = {
+      version: 1,
+      exported_at: new Date().toISOString(),
+      tasks: TASKS,
+      raci_data: RACI_DATA,
+      team: window.TEAM || []
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g, '-');
+    a.href = url;
+    a.download = `roadmap-mkt-backup_${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+  };
+
+  // ── 12) Boot final ──────────────────────────────────────────────────
+  function boot(){
+    ensureBackupButton();
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
 })();
 </script>
 </body>
