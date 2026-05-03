@@ -2042,6 +2042,627 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
 })();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 1.5 — PATCHES                                                 ║
+   ║  - Logo Costa Brava (SVG inline)                                    ║
+   ║  - Linha do hoje forçada (mesmo se hoje < PS)                       ║
+   ║  - Label nas barras de Ocorrência                                   ║
+   ║  - Campo Observações por etapa                                      ║
+   ║  - Audit "Última edição por X em DD/MM HH:MM"                       ║
+   ║  - Seletor "Eu sou" no topbar (identificação do editor)             ║
+   ║  - Painel de Atividade (descrição + anexos no Storage)              ║
+   ║  - Filtro por colaborador na barra de BU                            ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase1_5(){
+
+  // ── CSS adicional ────────────────────────────────────────────────────
+  const css = `
+.brand .cb-logo{height:34px;width:auto;display:block;flex-shrink:0;}
+.brand-wave{display:none !important;}
+.brand > span:not(#todayChip):not(.today-chip){display:none !important;}
+.brand{gap:10px;}
+#inNotes{width:100%;border:1.5px solid var(--cb-rule);border-radius:7px;padding:8px 10px;font-family:inherit;font-size:12px;resize:vertical;min-height:64px;outline:none;line-height:1.45;}
+#inNotes:focus{border-color:var(--cb-coral);}
+.ep-last-edit{font-size:9.5px;color:var(--cb-ink3);text-align:right;padding:8px 0 4px 0;border-top:1px dashed var(--cb-rule);margin-top:8px;font-style:italic;letter-spacing:.2px;}
+.ep-last-edit.empty{color:#CBD5E1;}
+.ep-last-edit .who{font-weight:600;color:var(--cb-ink2);font-style:normal;}
+.cb-iam{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 10px;border-radius:6px;font-family:'Epilogue',sans-serif;font-size:12px;font-weight:600;margin-left:8px;cursor:pointer;outline:none;}
+.cb-iam option{background:#1C3450;color:#fff;}
+.cb-person-filter{display:inline-flex;align-items:center;gap:6px;padding:0 4px 0 12px;border-left:1.5px solid var(--cb-rule);margin-left:8px;}
+.cb-person-filter label{font-size:10px;font-weight:700;color:var(--cb-ink3);text-transform:uppercase;letter-spacing:.5px;}
+.cb-person-filter select{border:1.5px solid var(--cb-rule);border-radius:6px;padding:5px 26px 5px 8px;font-size:12px;font-family:inherit;background:#fff;outline:none;cursor:pointer;}
+.cb-person-filter select:focus{border-color:var(--cb-coral);}
+.task-panel{position:fixed;right:0;top:0;width:520px;max-width:95vw;height:100vh;background:#fff;box-shadow:-8px 0 28px rgba(0,0,0,.18);z-index:120;transform:translateX(100%);transition:transform .25s ease-out;display:flex;flex-direction:column;}
+.task-panel.open{transform:translateX(0);}
+.task-panel-ov{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:115;opacity:0;pointer-events:none;transition:opacity .2s;}
+.task-panel-ov.open{opacity:1;pointer-events:auto;}
+.task-panel-hdr{padding:18px 22px;border-bottom:1px solid var(--cb-rule);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:linear-gradient(135deg,var(--cb-navy),var(--cb-navy-mid));color:#fff;}
+.task-panel-hdr .ttl{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:16px;letter-spacing:.2px;line-height:1.25;}
+.task-panel-hdr .meta{font-size:10px;color:rgba(255,255,255,.65);margin-top:5px;letter-spacing:.5px;text-transform:uppercase;}
+.task-panel-hdr .close{background:transparent;border:0;color:rgba(255,255,255,.7);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;}
+.task-panel-hdr .close:hover{color:#fff;}
+.task-panel-body{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:18px;}
+.task-panel-body label{font-size:11px;font-weight:700;color:var(--cb-ink2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
+.task-panel-body input.tp-name{width:100%;border:1.5px solid var(--cb-rule);border-radius:7px;padding:9px 12px;font-size:14px;font-weight:600;outline:none;font-family:inherit;}
+.task-panel-body input.tp-name:focus{border-color:var(--cb-coral);}
+.task-panel-body textarea{width:100%;border:1.5px solid var(--cb-rule);border-radius:7px;padding:10px 12px;font-family:inherit;font-size:12.5px;resize:vertical;min-height:120px;line-height:1.5;outline:none;}
+.task-panel-body textarea:focus{border-color:var(--cb-coral);}
+.cb-attach-list{display:flex;flex-direction:column;gap:6px;}
+.cb-attach-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--cb-rule);border-radius:7px;font-size:12px;background:#fff;}
+.cb-attach-item .ico{font-size:16px;}
+.cb-attach-item .name{flex:1;color:var(--cb-ink1);font-weight:500;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cb-attach-item .name:hover{text-decoration:underline;color:var(--cb-coral-d);}
+.cb-attach-item .sz{font-size:10px;color:var(--cb-ink3);}
+.cb-attach-item .rm{cursor:pointer;color:#DC2626;font-size:14px;opacity:.6;background:none;border:0;padding:2px 6px;}
+.cb-attach-item .rm:hover{opacity:1;}
+.cb-attach-drop{border:2px dashed var(--cb-rule2);border-radius:8px;padding:18px;text-align:center;color:var(--cb-ink3);cursor:pointer;font-size:12px;transition:all .15s;}
+.cb-attach-drop:hover,.cb-attach-drop.over{background:#FAFAFA;border-color:var(--cb-coral);color:var(--cb-coral-d);}
+.cb-attach-drop input{display:none;}
+.cb-attach-progress{height:4px;background:#F0EDF8;border-radius:2px;overflow:hidden;margin-top:6px;display:none;}
+.cb-attach-progress.show{display:block;}
+.cb-attach-progress > div{height:100%;background:var(--cb-coral);transition:width .2s;width:0;}
+.task-panel-footer{padding:12px 22px;border-top:1px solid var(--cb-rule);display:flex;justify-content:space-between;align-items:center;background:#FAFAFA;gap:12px;}
+.task-panel-footer .last-edit{font-size:10px;color:var(--cb-ink3);font-style:italic;}
+.task-panel-footer button{background:var(--cb-coral);color:#fff;border:0;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.task-panel-footer button:hover{background:var(--cb-coral-d);}
+.t-name{cursor:pointer !important;}
+.t-name:hover{color:var(--cb-coral) !important;text-decoration:underline;}
+.seg-occ-lbl{font-size:9px !important;font-weight:700 !important;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;text-align:center;}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id: 'cb-phase15-css', textContent: css }));
+
+  // ── Logo SVG (substitui o emoji + texto) ────────────────────────────
+  function setupLogo(){
+    const brand = document.querySelector('.brand');
+    if (!brand || brand.querySelector('.cb-logo')) return;
+    const todayChip = document.getElementById('todayChip');
+    const logoSVG = `
+<svg class="cb-logo" viewBox="0 0 230 44" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(178 2)">
+    <rect x="0" y="0" width="38" height="22" rx="3" fill="none" stroke="#fff" stroke-width="2.2" transform="rotate(-4 19 11)"/>
+    <rect x="-7" y="11" width="38" height="22" rx="3" fill="#A5C8D8" opacity="0.78" transform="rotate(4 12 22)"/>
+  </g>
+  <text x="0" y="29" font-family="'Cabinet Grotesk', 'Epilogue', sans-serif" font-weight="800" font-size="22" fill="#fff" letter-spacing="-0.4">CostaBrava</text>
+  <text x="2" y="40" font-family="'Cabinet Grotesk', 'Epilogue', sans-serif" font-weight="500" font-size="7.5" fill="#A5C8D8" letter-spacing="2.4">travel &amp; events</text>
+</svg>`;
+    // Limpa o brand mantendo apenas todayChip
+    brand.innerHTML = logoSVG;
+    if (todayChip) brand.appendChild(todayChip);
+  }
+
+  // ── Today line forçado ──────────────────────────────────────────────
+  function ensureTodayLine(){
+    const cv = document.getElementById('canvas');
+    if (!cv) return;
+    const now = new Date(); now.setHours(0,0,0,0);
+    if (typeof PS === 'undefined' || typeof dw !== 'function') return;
+    let tl = cv.querySelector('.today-line');
+    const msPerDay = 86400000;
+    const daysDiff = Math.round((now.getTime() - PS.getTime()) / msPerDay);
+    const tx = daysDiff * dw();
+    const cwidth = parseFloat(cv.style.width || '0') || cv.offsetWidth;
+    const cheight = parseFloat(cv.style.height || '0') || cv.offsetHeight;
+    if (cheight < 10) return;
+    // Só desenha se hoje está dentro de ±60 dias do range visível
+    if (tx < -60 * dw() || tx > cwidth + 60 * dw()) {
+      if (tl) tl.remove();
+      return;
+    }
+    if (!tl){
+      tl = document.createElement('div');
+      tl.className = 'today-line';
+      cv.appendChild(tl);
+    }
+    const clampedX = Math.max(0, Math.min(cwidth - 3, tx));
+    tl.style.left = clampedX + 'px';
+    tl.style.height = cheight + 'px';
+    if (!tl.querySelector('.today-pip')){
+      const pip = document.createElement('div');
+      pip.className = 'today-pip';
+      tl.appendChild(pip);
+    }
+    let lbl = tl.querySelector('.today-lbl');
+    if (!lbl){
+      lbl = document.createElement('div');
+      lbl.className = 'today-lbl';
+      tl.appendChild(lbl);
+    }
+    const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const d = new Date();
+    lbl.textContent = days[d.getDay()] + ' ' + String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  // ── Decora barras de Ocorrência com label ───────────────────────────
+  function decorateOccBars(){
+    const cv = document.getElementById('canvas');
+    if (!cv || typeof visibleTasks !== 'function') return;
+    const visAll = visibleTasks();
+    const visTasks = visAll.filter(t => !t.G);
+    const rows = cv.querySelectorAll('.canvas-t-row');
+    rows.forEach((row, idx) => {
+      const task = visTasks[idx];
+      if (!task) return;
+      const occBars = row.querySelectorAll('.seg-occ');
+      if (!occBars.length) return;
+      const parentSeg = (task.segs||[]).find(s => s.t === 'occ' || s.freq);
+      const lblText = (parentSeg && parentSeg.lbl) ? parentSeg.lbl : '';
+      occBars.forEach(bar => {
+        if (bar.querySelector('.seg-lbl')) return;
+        if (!lblText) return;
+        bar.style.display = 'flex';
+        bar.style.alignItems = 'center';
+        bar.style.justifyContent = 'center';
+        bar.style.overflow = 'hidden';
+        const lbl = document.createElement('span');
+        lbl.className = 'seg-lbl seg-occ-lbl';
+        lbl.textContent = lblText;
+        const st = bar.style.color || '#7C3AED';
+        lbl.style.color = st;
+        bar.appendChild(lbl);
+      });
+    });
+  }
+
+  // ── Marca rows com data-task-id pra cliques no nome funcionarem ─────
+  function tagRows(){
+    if (typeof visibleTasks !== 'function') return;
+    const visTasks = visibleTasks().filter(t => !t.G);
+    document.querySelectorAll('#namesBody .t-row').forEach((nr, idx) => {
+      if (visTasks[idx]) nr.dataset.taskId = visTasks[idx].id || '';
+    });
+  }
+
+  // ── Patch renderTasks (decora pós-render) ───────────────────────────
+  const _origRender = window.renderTasks;
+  window.renderTasks = function(){
+    const r = _origRender.apply(this, arguments);
+    try {
+      ensureTodayLine();
+      decorateOccBars();
+      tagRows();
+    } catch(e){ console.error('[CB Phase1.5 render hooks]', e); }
+    return r;
+  };
+
+  // ── "Eu sou" selector (topbar) ──────────────────────────────────────
+  function setupIamSelector(){
+    const right = document.querySelector('.topbar-right');
+    if (!right || document.getElementById('cb-iam')) return;
+    const sel = document.createElement('select');
+    sel.id = 'cb-iam';
+    sel.className = 'cb-iam';
+    function rebuildOptions(){
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Eu sou…</option>' +
+        (window.cbGetTeam ? cbGetTeam().map(m =>
+          `<option value="${m.id}"${cur===m.id?' selected':''}>${m.name}</option>`
+        ).join('') : '');
+      const stored = localStorage.getItem('cb_iam') || '';
+      if (stored && !sel.value) sel.value = stored;
+    }
+    rebuildOptions();
+    sel.onchange = (e) => {
+      localStorage.setItem('cb_iam', e.target.value || '');
+    };
+    right.insertBefore(sel, right.firstChild);
+    // Atualiza opções quando o team for carregado do Supabase
+    setTimeout(rebuildOptions, 1500);
+    setTimeout(rebuildOptions, 3500);
+  }
+  function getCurrentEditor(){
+    const id = localStorage.getItem('cb_iam');
+    if (!id) return null;
+    const m = window.cbFindMember ? cbFindMember(id) : null;
+    return m ? { id: m.id, name: m.name } : null;
+  }
+  function fmtDateTime(iso){
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yy = String(d.getFullYear()).slice(2);
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+    } catch(e){ return iso; }
+  }
+
+  // ── Patch openEdit: adiciona Observações + Audit footer ─────────────
+  const _origOpenEdit2 = window.openEdit;
+  window.openEdit = function(task, si){
+    _origOpenEdit2.call(this, task, si);
+    const seg = task.segs[si >= 0 ? si : 0];
+    if (!seg) return;
+    const epBody = document.getElementById('epBody');
+    if (!epBody) return;
+    // Adiciona campo Observações antes da lista de etapas
+    if (!document.getElementById('inNotes')){
+      const notesField = document.createElement('div');
+      notesField.className = 'ep-field';
+      notesField.innerHTML = `
+        <label>📝 Observações da etapa</label>
+        <textarea id="inNotes" placeholder="Descreva o que está sendo feito nesta etapa, decisões, links, etc."></textarea>
+      `;
+      const segsBlock = epBody.querySelector('.ep-segs');
+      if (segsBlock) epBody.insertBefore(notesField, segsBlock);
+      else epBody.appendChild(notesField);
+    }
+    document.getElementById('inNotes').value = seg.notes || '';
+    // Adiciona footer de última edição
+    if (!document.getElementById('epLastEdit')){
+      const audit = document.createElement('div');
+      audit.id = 'epLastEdit';
+      audit.className = 'ep-last-edit';
+      const actions = epBody.querySelector('.ep-actions');
+      if (actions) epBody.insertBefore(audit, actions);
+      else epBody.appendChild(audit);
+    }
+    const auditEl = document.getElementById('epLastEdit');
+    if (seg.last_edit && seg.last_edit.at){
+      const who = seg.last_edit.by_name || seg.last_edit.by_id || 'desconhecido';
+      auditEl.classList.remove('empty');
+      auditEl.innerHTML = `Última edição por <span class="who">${who}</span> em ${fmtDateTime(seg.last_edit.at)}`;
+    } else {
+      auditEl.classList.add('empty');
+      auditEl.textContent = 'Sem edições registradas ainda';
+    }
+  };
+
+  // ── Patch saveEdit: salva notes + carimba last_edit ─────────────────
+  const _origSaveEdit2 = window.saveEdit;
+  window.saveEdit = function(){
+    // Pega notes ANTES do save original (porque o orig fecha o panel)
+    const notesEl = document.getElementById('inNotes');
+    const notes = notesEl ? notesEl.value : null;
+    const targetTask = (typeof ET !== 'undefined') ? ET : null;
+    const targetSi   = (typeof ESI !== 'undefined') ? ESI : null;
+    _origSaveEdit2.apply(this, arguments);
+    if (targetTask && targetTask.segs && typeof targetSi === 'number'){
+      const seg = targetTask.segs[targetSi];
+      if (seg){
+        if (notes !== null) seg.notes = notes;
+        const editor = getCurrentEditor();
+        seg.last_edit = {
+          by_id: editor ? editor.id : null,
+          by_name: editor ? editor.name : 'Anônimo',
+          at: new Date().toISOString()
+        };
+        if (typeof renderTasks === 'function') renderTasks();
+      }
+    }
+  };
+
+  // ── Filtro por colaborador (na barra de filtros BU) ─────────────────
+  window._cbActivePerson = null;
+  function setupPersonFilter(){
+    const bar = document.querySelector('.filter-bar');
+    if (!bar || document.getElementById('cb-person-filter')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'cb-person-filter';
+    wrap.className = 'cb-person-filter';
+    function buildHTML(){
+      return `
+        <label>👤 Pessoa</label>
+        <select id="cb-person-filter-sel">
+          <option value="">Todas</option>
+          ${(window.cbGetTeam ? cbGetTeam() : []).map(m =>
+            `<option value="${m.id}">${m.name}</option>`
+          ).join('')}
+        </select>
+      `;
+    }
+    wrap.innerHTML = buildHTML();
+    bar.appendChild(wrap);
+    function rebuild(){
+      const sel = document.getElementById('cb-person-filter-sel');
+      const cur = sel ? sel.value : '';
+      wrap.innerHTML = buildHTML();
+      const newSel = document.getElementById('cb-person-filter-sel');
+      if (newSel) newSel.value = cur;
+      bind();
+    }
+    function bind(){
+      const sel = document.getElementById('cb-person-filter-sel');
+      if (!sel) return;
+      sel.onchange = (e) => {
+        window._cbActivePerson = e.target.value || null;
+        if (typeof renderTasks === 'function') renderTasks();
+        if (typeof updateAlerts === 'function') updateAlerts();
+        if (typeof updateCounts === 'function') updateCounts();
+      };
+    }
+    bind();
+    setTimeout(rebuild, 1500);
+    setTimeout(rebuild, 3500);
+  }
+
+  // Patch visibleTasks pra também filtrar por pessoa
+  const _origVisible = window.visibleTasks;
+  if (typeof _origVisible === 'function'){
+    window.visibleTasks = function(){
+      const base = _origVisible.apply(this, arguments);
+      const pid = window._cbActivePerson;
+      if (!pid) return base;
+      const out = [];
+      let i = 0;
+      while (i < base.length) {
+        if (base[i].G) {
+          const grp = base[i];
+          const sub = [];
+          let j = i + 1;
+          while (j < base.length && !base[j].G) {
+            const t = base[j];
+            const match = (t.segs||[]).some(s => Array.isArray(s.owners) && s.owners.includes(pid));
+            if (match) sub.push(t);
+            j++;
+          }
+          if (sub.length){
+            out.push(grp);
+            sub.forEach(t => out.push(t));
+          }
+          i = j;
+        } else {
+          i++;
+        }
+      }
+      return out;
+    };
+  }
+
+  // ── Painel de Atividade (descrição + anexos) ────────────────────────
+  function ensureTaskPanel(){
+    if (document.getElementById('taskPanel')) return;
+    const ov = document.createElement('div');
+    ov.id = 'taskPanelOv';
+    ov.className = 'task-panel-ov';
+    ov.onclick = closeTaskPanel;
+    document.body.appendChild(ov);
+
+    const panel = document.createElement('div');
+    panel.id = 'taskPanel';
+    panel.className = 'task-panel';
+    panel.innerHTML = `
+      <div class="task-panel-hdr">
+        <div>
+          <div class="ttl" id="tpTitle">Atividade</div>
+          <div class="meta" id="tpMeta"></div>
+        </div>
+        <button class="close" onclick="cbCloseTaskPanel()" title="Fechar">×</button>
+      </div>
+      <div class="task-panel-body">
+        <div>
+          <label>Nome da atividade</label>
+          <input type="text" class="tp-name" id="tpName" />
+        </div>
+        <div>
+          <label>📄 Descrição da atividade</label>
+          <textarea id="tpDescription" placeholder="Descreva o objetivo, contexto, links importantes, decisões, etc."></textarea>
+        </div>
+        <div>
+          <label>📎 Anexos</label>
+          <div class="cb-attach-list" id="tpAttachList"></div>
+          <label class="cb-attach-drop" id="tpAttachDrop">
+            <input type="file" id="tpAttachInput" multiple />
+            Clique ou arraste arquivos aqui pra anexar (máx 50MB cada)
+          </label>
+          <div class="cb-attach-progress" id="tpAttachProgress"><div></div></div>
+        </div>
+      </div>
+      <div class="task-panel-footer">
+        <span class="last-edit" id="tpLastEdit"></span>
+        <button onclick="cbSaveTaskPanel()">Salvar</button>
+      </div>
+    `;
+    document.body.appendChild(panel);
+    // Wire up file input
+    document.getElementById('tpAttachInput').addEventListener('change', (e) => {
+      handleFiles(Array.from(e.target.files));
+      e.target.value = '';
+    });
+    const drop = document.getElementById('tpAttachDrop');
+    ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+      e.preventDefault(); drop.classList.add('over');
+    }));
+    ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+      e.preventDefault(); drop.classList.remove('over');
+    }));
+    drop.addEventListener('drop', e => {
+      handleFiles(Array.from(e.dataTransfer.files));
+    });
+  }
+
+  let _currentTaskForPanel = null;
+
+  function openTaskPanel(task){
+    ensureTaskPanel();
+    _currentTaskForPanel = task;
+    document.getElementById('tpTitle').textContent = task.n;
+    document.getElementById('tpMeta').textContent =
+      (task.bu||[]).join(' · ').toUpperCase() + (task.pri ? ' · ' + task.pri : '');
+    document.getElementById('tpName').value = task.n || '';
+    document.getElementById('tpDescription').value = task.description || '';
+    renderAttachList();
+    const audit = document.getElementById('tpLastEdit');
+    if (task.last_edit && task.last_edit.at){
+      audit.innerHTML = `Última edição por <strong>${task.last_edit.by_name || '—'}</strong> em ${fmtDateTime(task.last_edit.at)}`;
+    } else {
+      audit.textContent = 'Sem edições registradas ainda';
+    }
+    document.getElementById('taskPanel').classList.add('open');
+    document.getElementById('taskPanelOv').classList.add('open');
+  }
+
+  window.cbCloseTaskPanel = function(){
+    document.getElementById('taskPanel')?.classList.remove('open');
+    document.getElementById('taskPanelOv')?.classList.remove('open');
+    _currentTaskForPanel = null;
+  };
+  function closeTaskPanel(){ window.cbCloseTaskPanel(); }
+
+  window.cbSaveTaskPanel = function(){
+    if (!_currentTaskForPanel) return;
+    const t = _currentTaskForPanel;
+    const newName = document.getElementById('tpName').value.trim();
+    const newDesc = document.getElementById('tpDescription').value;
+    if (newName) t.n = newName;
+    t.description = newDesc;
+    const editor = getCurrentEditor();
+    t.last_edit = {
+      by_id: editor ? editor.id : null,
+      by_name: editor ? editor.name : 'Anônimo',
+      at: new Date().toISOString()
+    };
+    closeTaskPanel();
+    if (typeof renderTasks === 'function') renderTasks();
+    if (typeof updateAlerts === 'function') updateAlerts();
+  };
+
+  function renderAttachList(){
+    const list = document.getElementById('tpAttachList');
+    if (!list || !_currentTaskForPanel) return;
+    const att = _currentTaskForPanel.attachments || [];
+    if (!att.length){
+      list.innerHTML = '<div style="color:#9CA3AF;font-size:11px;font-style:italic;padding:4px 0;">Nenhum anexo ainda.</div>';
+      return;
+    }
+    list.innerHTML = att.map((a, idx) => {
+      const sz = a.size ? formatBytes(a.size) : '';
+      const ico = guessIcon(a.name, a.content_type);
+      return `
+        <div class="cb-attach-item" data-idx="${idx}">
+          <span class="ico">${ico}</span>
+          <a class="name" href="${a.url}" target="_blank" rel="noopener">${a.name}</a>
+          <span class="sz">${sz}</span>
+          <button class="rm" onclick="cbRemoveAttachment(${idx})" title="Remover">×</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function formatBytes(b){
+    if (b < 1024) return b + ' B';
+    if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    return (b/1024/1024).toFixed(1) + ' MB';
+  }
+  function guessIcon(name, type){
+    if (!name) return '📎';
+    const ext = (name.split('.').pop()||'').toLowerCase();
+    if (['pdf'].includes(ext)) return '📄';
+    if (['xls','xlsx','csv'].includes(ext)) return '📊';
+    if (['doc','docx'].includes(ext)) return '📝';
+    if (['ppt','pptx'].includes(ext)) return '🎞️';
+    if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) return '🖼️';
+    if (['zip','rar','7z'].includes(ext)) return '🗜️';
+    if (['mp4','mov','avi'].includes(ext)) return '🎬';
+    return '📎';
+  }
+
+  async function handleFiles(files){
+    if (!files || !files.length || !_currentTaskForPanel) return;
+    const cfg = window.CB_SUPABASE;
+    if (!cfg || !cfg.URL || !window.supabase){
+      alert('Supabase não configurado.');
+      return;
+    }
+    const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+    const t = _currentTaskForPanel;
+    if (!Array.isArray(t.attachments)) t.attachments = [];
+    const prog = document.getElementById('tpAttachProgress');
+    const pbar = prog.querySelector('div');
+    prog.classList.add('show');
+    pbar.style.width = '0%';
+    let i = 0;
+    for (const file of files){
+      if (file.size > 50 * 1024 * 1024){
+        alert(`"${file.name}" passa de 50MB — não vou subir.`);
+        continue;
+      }
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+      const path = `tasks/${t.id || 'misc'}/${Date.now()}_${safeName}`;
+      try {
+        const { error: upErr } = await sb.storage.from('roadmap-attachments').upload(path, file);
+        if (upErr) throw upErr;
+        const { data: urlData } = sb.storage.from('roadmap-attachments').getPublicUrl(path);
+        t.attachments.push({
+          name: file.name,
+          path,
+          size: file.size,
+          content_type: file.type || 'application/octet-stream',
+          url: urlData.publicUrl,
+          uploaded_at: new Date().toISOString(),
+          uploaded_by: getCurrentEditor()?.name || 'Anônimo'
+        });
+      } catch(e){
+        console.error('[upload]', e);
+        alert(`Erro ao subir "${file.name}": ${e.message}`);
+      }
+      i++;
+      pbar.style.width = (i / files.length * 100) + '%';
+    }
+    setTimeout(() => prog.classList.remove('show'), 800);
+    renderAttachList();
+    // Salva via renderTasks (trigger sync)
+    if (typeof renderTasks === 'function') renderTasks();
+  }
+
+  window.cbRemoveAttachment = async function(idx){
+    if (!_currentTaskForPanel) return;
+    const t = _currentTaskForPanel;
+    const a = (t.attachments||[])[idx];
+    if (!a) return;
+    if (!confirm(`Remover "${a.name}"? (Apaga do storage também)`)) return;
+    try {
+      const cfg = window.CB_SUPABASE;
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      await sb.storage.from('roadmap-attachments').remove([a.path]);
+    } catch(e){ console.warn('[remove storage]', e); }
+    t.attachments.splice(idx, 1);
+    renderAttachList();
+    if (typeof renderTasks === 'function') renderTasks();
+  };
+
+  // ── Click no nome da atividade abre o painel ────────────────────────
+  document.addEventListener('click', (e) => {
+    const tname = e.target && e.target.closest && e.target.closest('.t-name');
+    if (!tname) return;
+    const row = tname.closest('[data-task-id]');
+    if (!row) return;
+    const taskId = row.dataset.taskId;
+    const t = TASKS.find(x => x.id === taskId);
+    if (t) openTaskPanel(t);
+  });
+
+  // ── ESC fecha o painel de atividade ─────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape'){
+      const p = document.getElementById('taskPanel');
+      if (p && p.classList.contains('open')) closeTaskPanel();
+    }
+  });
+
+  // ── Boot ────────────────────────────────────────────────────────────
+  function boot15(){
+    setupLogo();
+    setupIamSelector();
+    setupPersonFilter();
+    ensureTaskPanel();
+    // Re-renderiza após carregar pra aplicar today line + decora occ
+    setTimeout(() => {
+      try { if (typeof renderTasks === 'function') renderTasks(); } catch(e){}
+    }, 200);
+    setTimeout(() => {
+      try { if (typeof renderTasks === 'function') renderTasks(); } catch(e){}
+    }, 1800);
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot15);
+  } else {
+    boot15();
+  }
+
+})();
 </script>
 </body>
 </html>
