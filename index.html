@@ -4576,6 +4576,227 @@ document.addEventListener('DOMContentLoaded',()=>{
   else boot32();
   setTimeout(boot32, 1500);
 })();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 4 — Histórico automático de snapshots                         ║
+   ║  Toda vez que alguém inicia uma sessão de edição, o estado          ║
+   ║  pré-edição é arquivado automaticamente em roadmap_history.         ║
+   ║  Modal "📜 Histórico" lista, restaura ou baixa qualquer versão.     ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase4History(){
+  const css = `
+.cb-hist-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;animation:cb-fade .2s;}
+.cb-hist-box{background:#fff;border-radius:14px;padding:22px;max-width:680px;width:92%;max-height:84vh;display:flex;flex-direction:column;box-shadow:0 14px 40px rgba(0,0,0,.25);}
+.cb-hist-box h3{margin:0 0 6px;font-family:'Cabinet Grotesk',sans-serif;font-size:18px;color:var(--cb-navy);font-weight:800;}
+.cb-hist-box p{margin:0 0 14px;font-size:12px;color:var(--cb-ink3);line-height:1.45;}
+.cb-hist-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;min-height:200px;max-height:55vh;padding-right:4px;}
+.cb-hist-item{border:1px solid var(--cb-rule);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;background:#fff;transition:all .12s;}
+.cb-hist-item:hover{border-color:var(--cb-coral);box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.cb-hist-item .when{font-family:'Cabinet Grotesk',sans-serif;font-weight:700;color:var(--cb-navy);}
+.cb-hist-item .who{font-size:10px;color:var(--cb-ink3);margin-top:2px;}
+.cb-hist-actions{display:flex;gap:6px;flex-shrink:0;}
+.cb-hist-actions button{font-family:inherit;cursor:pointer;font-weight:600;font-size:11px;padding:6px 10px;border-radius:6px;}
+.cb-hist-dl{background:transparent;border:1px solid var(--cb-rule);color:var(--cb-ink2);}
+.cb-hist-dl:hover{background:#FAFAFA;}
+.cb-hist-restore{background:var(--cb-coral);color:#fff;border:0;font-weight:700;}
+.cb-hist-restore:hover{background:var(--cb-coral-d);}
+.cb-hist-cancel{margin-top:12px;align-self:flex-end;background:transparent;border:0;color:var(--cb-ink3);font-size:12px;cursor:pointer;font-family:inherit;}
+.cb-hist-cancel:hover{color:var(--cb-coral-d);}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id:'cb-phase4-css', textContent: css }));
+
+  let baseline = null;
+  let snapshotTaken = false;
+
+  function captureBaseline(){
+    if (baseline) return;
+    if (!TASKS || TASKS.length === 0) return;
+    try {
+      baseline = {
+        tasks: JSON.parse(JSON.stringify(TASKS)),
+        raci_data: JSON.parse(JSON.stringify(RACI_DATA)),
+        team: JSON.parse(JSON.stringify(window.TEAM || [])),
+        branding: JSON.parse(JSON.stringify(window.cbBrand || {}))
+      };
+      console.log('[CB History] Baseline capturado (' + TASKS.length + ' tasks)');
+    } catch(e){ console.warn('[CB History] erro baseline:', e); }
+  }
+
+  async function takeSessionSnapshot(){
+    if (snapshotTaken || !baseline) return;
+    snapshotTaken = true;
+    try {
+      const cfg = window.CB_SUPABASE;
+      if (!cfg || !window.supabase) return;
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      const id = localStorage.getItem('cb_iam');
+      const m = id && window.cbFindMember ? cbFindMember(id) : null;
+      const { error } = await sb.from('roadmap_history').insert({
+        tasks: baseline.tasks,
+        raci_data: baseline.raci_data,
+        team: baseline.team,
+        branding: baseline.branding,
+        trigger: 'session_start',
+        by_name: m ? m.name : 'Anônimo'
+      });
+      if (error) throw error;
+      console.log('[CB History] Snapshot da sessão arquivado ✓');
+    } catch(e){
+      console.warn('[CB History] Erro snapshot:', e);
+      snapshotTaken = false; // permitir retry
+    }
+  }
+
+  // Hook pós-render: detecta primeira mudança
+  const _origRender_4 = window.renderTasks;
+  window.renderTasks = function(){
+    const r = _origRender_4.apply(this, arguments);
+    setTimeout(() => {
+      if (!baseline){
+        captureBaseline();
+        return;
+      }
+      if (!snapshotTaken){
+        const cur = JSON.stringify({ t: TASKS, r: RACI_DATA, m: window.TEAM, b: window.cbBrand });
+        const base = JSON.stringify({ t: baseline.tasks, r: baseline.raci_data, m: baseline.team, b: baseline.branding });
+        if (cur !== base) takeSessionSnapshot();
+      }
+    }, 250);
+    return r;
+  };
+
+  // ── Botão Histórico no topbar ───────────────────────────────────────
+  function setupHistoryButton(){
+    const importBtn = document.getElementById('cb-import-btn');
+    const backupBtn = document.getElementById('cb-backup-btn');
+    const anchor = importBtn || backupBtn;
+    if (!anchor || document.getElementById('cb-history-btn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'cb-history-btn';
+    btn.className = 'cb-import-btn';
+    btn.title = 'Ver histórico de versões (snapshots automáticos)';
+    btn.innerHTML = '📜 Histórico';
+    btn.onclick = openHistoryModal;
+    anchor.parentElement.insertBefore(btn, anchor.nextSibling);
+  }
+
+  function fmtDateTime(iso){
+    try {
+      const d = new Date(iso);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yy = String(d.getFullYear()).slice(2);
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+    } catch(e){ return iso; }
+  }
+
+  async function openHistoryModal(){
+    const cfg = window.CB_SUPABASE;
+    if (!cfg || !window.supabase){ alert('Supabase indisponível'); return; }
+    const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+
+    const ov = document.createElement('div');
+    ov.className = 'cb-hist-ov';
+    const box = document.createElement('div');
+    box.className = 'cb-hist-box';
+    box.innerHTML = `
+      <h3>📜 Histórico de Versões</h3>
+      <p>Toda vez que alguém começa uma sessão de edição, o estado <strong>antes da primeira mudança</strong> é arquivado aqui. Use "↶ Restaurar" pra voltar a uma versão, ou "⬇ Baixar" pra exportar o JSON daquela versão.</p>
+      <div class="cb-hist-list" id="cb-hist-list"><div style="text-align:center;color:#9CA3AF;padding:30px;font-size:12px;">Carregando…</div></div>
+      <button class="cb-hist-cancel">Fechar</button>
+    `;
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    box.querySelector('.cb-hist-cancel').onclick = () => ov.remove();
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+
+    try {
+      const { data, error } = await sb.from('roadmap_history')
+        .select('id, snapshot_at, trigger, by_name')
+        .order('snapshot_at', { ascending: false })
+        .limit(80);
+      if (error) throw error;
+      const list = box.querySelector('#cb-hist-list');
+      if (!data.length){
+        list.innerHTML = '<div style="text-align:center;color:#9CA3AF;padding:30px;font-size:12px;">Nenhuma versão arquivada ainda. As versões serão criadas automaticamente assim que houver edições.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'cb-hist-item';
+        card.innerHTML = `
+          <div>
+            <div class="when">${fmtDateTime(item.snapshot_at)}</div>
+            <div class="who">${(item.by_name||'Anônimo')} · ${item.trigger||''}</div>
+          </div>
+          <div class="cb-hist-actions">
+            <button class="cb-hist-dl" data-act="dl" data-id="${item.id}">⬇ Baixar</button>
+            <button class="cb-hist-restore" data-act="restore" data-id="${item.id}">↶ Restaurar</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+      list.querySelectorAll('button[data-act]').forEach(b => {
+        b.onclick = async () => {
+          const id = parseInt(b.dataset.id, 10);
+          const act = b.dataset.act;
+          try {
+            const { data: snap, error } = await sb.from('roadmap_history').select('*').eq('id', id).single();
+            if (error) throw error;
+            if (act === 'dl'){
+              const blob = new Blob([JSON.stringify({
+                version: 1,
+                source: 'roadmap_history',
+                exported_at: snap.snapshot_at,
+                by_name: snap.by_name,
+                tasks: snap.tasks,
+                raci_data: snap.raci_data,
+                team: snap.team,
+                branding: snap.branding
+              }, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              const ts = new Date(snap.snapshot_at).toISOString().slice(0,16).replace(/[:T]/g,'-');
+              a.href = url; a.download = `roadmap-historico_${ts}.json`;
+              document.body.appendChild(a); a.click();
+              setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+            } else if (act === 'restore'){
+              if (!confirm(`Restaurar versão de ${fmtDateTime(snap.snapshot_at)}?\n\nIsso substitui o estado atual de TODOS os usuários. Pode usar Ctrl+Z se quiser desfazer.`)) return;
+              if (Array.isArray(snap.tasks)){ TASKS.length = 0; snap.tasks.forEach(x => TASKS.push(x)); }
+              if (Array.isArray(snap.raci_data)){ RACI_DATA.length = 0; snap.raci_data.forEach(x => RACI_DATA.push(x)); }
+              if (Array.isArray(snap.team)) window.TEAM = snap.team;
+              if (snap.branding){
+                window.cbBrand = snap.branding;
+                if (typeof window.cbApplyBrandLogo === 'function') cbApplyBrandLogo();
+              }
+              if (typeof renderTasks === 'function') renderTasks();
+              if (typeof updateAlerts === 'function') updateAlerts();
+              if (typeof updateCounts === 'function') updateCounts();
+              if (typeof raciBuilt !== 'undefined' && raciBuilt){
+                raciBuilt = false;
+                if (typeof buildRaciTable === 'function') buildRaciTable();
+              }
+              if (typeof window.cbRenderTeamPage === 'function') cbRenderTeamPage();
+              ov.remove();
+            }
+          } catch(err){
+            alert('Erro: ' + err.message);
+          }
+        };
+      });
+    } catch(err){
+      box.querySelector('#cb-hist-list').innerHTML = '<div style="color:#DC2626;padding:30px;text-align:center;font-size:12px;">Erro ao carregar histórico: ' + err.message + '</div>';
+    }
+  }
+
+  function boot4(){ setupHistoryButton(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot4);
+  else boot4();
+  setTimeout(boot4, 1500);
+})();
 </script>
 </body>
 </html>
