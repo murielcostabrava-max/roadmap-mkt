@@ -2136,21 +2136,26 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (todayChip) brand.appendChild(todayChip);
   }
 
-  // ── Today line forçado ──────────────────────────────────────────────
+  // ── Today line — usa a MESMA lógica do xp() (que é relativa ao 1º dia do mês de PS) ─
   function ensureTodayLine(){
     const cv = document.getElementById('canvas');
     if (!cv) return;
-    const now = new Date(); now.setHours(0,0,0,0);
-    if (typeof PS === 'undefined' || typeof dw !== 'function') return;
-    let tl = cv.querySelector('.today-line');
-    const msPerDay = 86400000;
-    const daysDiff = Math.round((now.getTime() - PS.getTime()) / msPerDay);
-    const tx = daysDiff * dw();
+    if (typeof PS === 'undefined' || typeof dw !== 'function' || typeof dim !== 'function') return;
+    const d = new Date(); d.setHours(0,0,0,0);
+    // Replica xp(): meses cheios desde o mês de PS + (dia-1)*dw
+    let tx = 0;
+    const c = new Date(PS.getFullYear(), PS.getMonth(), 1);
+    while (c.getFullYear() < d.getFullYear() || (c.getFullYear() === d.getFullYear() && c.getMonth() < d.getMonth())){
+      tx += dim(c.getFullYear(), c.getMonth()) * dw();
+      c.setMonth(c.getMonth() + 1);
+    }
+    tx += (d.getDate() - 1) * dw();
     const cwidth = parseFloat(cv.style.width || '0') || cv.offsetWidth;
     const cheight = parseFloat(cv.style.height || '0') || cv.offsetHeight;
     if (cheight < 10) return;
-    // Só desenha se hoje está dentro de ±60 dias do range visível
-    if (tx < -60 * dw() || tx > cwidth + 60 * dw()) {
+    let tl = cv.querySelector('.today-line');
+    // Se hoje está fora da faixa do canvas (±60d), remove a linha
+    if (tx < -60 * dw() || tx > cwidth + 60 * dw()){
       if (tl) tl.remove();
       return;
     }
@@ -2159,8 +2164,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       tl.className = 'today-line';
       cv.appendChild(tl);
     }
-    const clampedX = Math.max(0, Math.min(cwidth - 3, tx));
-    tl.style.left = clampedX + 'px';
+    tl.style.left = tx + 'px';
     tl.style.height = cheight + 'px';
     if (!tl.querySelector('.today-pip')){
       const pip = document.createElement('div');
@@ -2174,7 +2178,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       tl.appendChild(lbl);
     }
     const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    const d = new Date();
     lbl.textContent = days[d.getDay()] + ' ' + String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
   }
 
@@ -2682,11 +2685,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   const css = `
 .cb-logo{display:none !important;}
 .brand-wave{display:none !important;}
-.cb-brand-slot{position:relative;display:inline-flex;align-items:center;cursor:pointer;border-radius:6px;padding:4px 6px;transition:background .15s;height:42px;box-sizing:border-box;}
+.topbar{min-height:64px;}
+.cb-brand-slot{position:relative;display:inline-flex;align-items:center;cursor:pointer;border-radius:8px;padding:4px 8px;transition:background .15s;height:56px;box-sizing:border-box;}
 .cb-brand-slot:hover{background:rgba(255,255,255,.06);}
-.cb-brand-slot img{max-height:34px;max-width:200px;width:auto;display:block;object-fit:contain;}
-.cb-brand-slot .cb-brand-fallback{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.4px;color:#fff;}
-.cb-brand-slot .cb-logo-edit{position:absolute;top:-4px;right:-4px;background:var(--cb-coral);color:#fff;border:0;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.cb-brand-slot img{max-height:52px;max-width:280px;width:auto;display:block;object-fit:contain;}
+.cb-brand-slot .cb-brand-fallback{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:24px;letter-spacing:-0.5px;color:#fff;}
+.cb-brand-slot .cb-logo-edit{position:absolute;top:-2px;right:-4px;background:var(--cb-coral);color:#fff;border:0;border-radius:50%;width:24px;height:24px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;box-shadow:0 2px 6px rgba(0,0,0,.25);}
 .cb-brand-slot:hover .cb-logo-edit{opacity:1;}
 .cb-iam{display:none !important;}
 .cb-iden-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:center;justify-content:center;animation:cb-fade .2s;}
@@ -2845,12 +2849,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     } catch(e){ /* silent */ }
   }
 
-  // ── Datas default = hoje ────────────────────────────────────────────
-  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  // ── Datas default = hoje (timezone local, não UTC) ──────────────────
+  function _localDateISO(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+  function todayISO(){ return _localDateISO(new Date()); }
   function plusDaysISO(n){
     const d = new Date();
     d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0,10);
+    return _localDateISO(d);
   }
 
   // openAddRow: sobrescreve datas padrão
@@ -3076,6 +3086,176 @@ document.addEventListener('DOMContentLoaded',()=>{
   } else {
     boot16();
   }
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 1.7 — Duplicar / Mover etapa entre atividades                ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase1_7(){
+  const css = `
+.cb-seg-action{cursor:pointer;font-size:14px;padding:0 5px;margin-left:2px;color:#1A3C6E;line-height:1;display:inline-block;}
+.cb-seg-action:hover{transform:scale(1.18);color:var(--cb-coral);}
+.cb-seg-action.dup{color:#0369A1;}
+.cb-seg-action.mov{color:#92400E;}
+.cb-tp-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;animation:cb-fade .2s;}
+.cb-tp-box{background:#fff;border-radius:14px;padding:22px;max-width:540px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 14px 40px rgba(0,0,0,.25);}
+.cb-tp-box h3{margin:0 0 12px;font-family:'Cabinet Grotesk',sans-serif;font-size:16px;color:var(--cb-navy);font-weight:800;}
+.cb-tp-modes{display:flex;gap:8px;margin-bottom:12px;}
+.cb-tp-modes button{flex:1;padding:9px 12px;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;border:1.5px solid;transition:all .15s;}
+.cb-tp-modes button[data-mode="copy"]{background:#DBEAFE;border-color:#93C5FD;color:#1E40AF;}
+.cb-tp-modes button[data-mode="move"]{background:#FEF3C7;border-color:#FCD34D;color:#92400E;}
+.cb-tp-modes button.sel{box-shadow:0 0 0 3px rgba(0,0,0,.08);}
+.cb-tp-search{width:100%;padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;margin-bottom:8px;outline:none;font-family:inherit;}
+.cb-tp-search:focus{border-color:var(--cb-coral);}
+.cb-tp-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px;min-height:200px;max-height:50vh;}
+.cb-tp-item{background:#fff;border:1px solid #E5E7EB;border-radius:7px;padding:9px 12px;cursor:pointer;font-family:inherit;text-align:left;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;transition:all .12s;}
+.cb-tp-item:hover{border-color:var(--cb-coral);background:#FFFAFA;}
+.cb-tp-item .grp{font-size:9px;color:var(--cb-ink3);text-transform:uppercase;letter-spacing:.5px;}
+.cb-tp-item .nm{font-weight:600;color:var(--cb-ink1);margin-top:2px;}
+.cb-tp-cancel{margin-top:10px;align-self:flex-end;background:transparent;border:0;color:var(--cb-ink3);font-size:12px;cursor:pointer;font-family:inherit;}
+.cb-tp-cancel:hover{color:var(--cb-coral-d);}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id: 'cb-phase17-css', textContent: css }));
+
+  // Patch openEdit: injeta botões Duplicar (⎘) e Mover (↪) em cada linha da lista
+  const _oeOpenEdit_17 = window.openEdit;
+  if (typeof _oeOpenEdit_17 === 'function'){
+    window.openEdit = function(task, si){
+      _oeOpenEdit_17.call(this, task, si);
+      setTimeout(() => {
+        const rows = document.querySelectorAll('#epBody .ep-seg-row');
+        rows.forEach((row, idx) => {
+          if (row.querySelector('.cb-seg-action')) return;
+          const dup = document.createElement('span');
+          dup.className = 'cb-seg-action dup';
+          dup.textContent = '⎘';
+          dup.title = 'Duplicar etapa nesta atividade';
+          dup.onclick = (e) => { e.stopPropagation(); window.cbDuplicateSeg(idx); };
+          const mov = document.createElement('span');
+          mov.className = 'cb-seg-action mov';
+          mov.textContent = '↪';
+          mov.title = 'Mover/copiar para outra atividade';
+          mov.onclick = (e) => { e.stopPropagation(); window.cbMoveSegToTask(idx); };
+          const existingDelete = row.querySelector('span[title="Remover"]');
+          if (existingDelete){
+            row.insertBefore(mov, existingDelete);
+            row.insertBefore(dup, mov);
+          } else {
+            row.appendChild(dup);
+            row.appendChild(mov);
+          }
+        });
+      }, 50);
+    };
+  }
+
+  window.cbDuplicateSeg = function(idx){
+    if (typeof ET === 'undefined' || !ET || !ET.segs) return;
+    const orig = ET.segs[idx];
+    if (!orig) return;
+    const copy = JSON.parse(JSON.stringify(orig));
+    if (copy.lbl) copy.lbl = copy.lbl + ' (cópia)';
+    delete copy.last_edit;
+    ET.segs.splice(idx + 1, 0, copy);
+    openEdit(ET, idx + 1);
+    if (typeof renderTasks === 'function') renderTasks();
+  };
+
+  window.cbMoveSegToTask = function(idx){
+    if (typeof ET === 'undefined' || !ET || !ET.segs) return;
+    const seg = ET.segs[idx];
+    if (!seg) return;
+    const sourceTask = ET;
+    showTaskPickerModal(
+      `Etapa "${seg.lbl||'(sem nome)'}" — escolha o destino:`,
+      sourceTask,
+      (targetTaskId, mode) => {
+        if (!targetTaskId) return;
+        const target = TASKS.find(t => t.id === targetTaskId);
+        if (!target) return;
+        if (!Array.isArray(target.segs)) target.segs = [];
+        const copy = JSON.parse(JSON.stringify(seg));
+        delete copy.last_edit;
+        target.segs.push(copy);
+        if (mode === 'move'){
+          if (sourceTask.segs.length <= 1){
+            alert('Esta atividade tem só uma etapa — não posso mover, faria a atividade ficar vazia. Use "Copiar".');
+            // Rollback
+            target.segs.pop();
+            return;
+          }
+          sourceTask.segs.splice(idx, 1);
+        }
+        if (typeof closeEdit === 'function') closeEdit();
+        if (typeof renderTasks === 'function') renderTasks();
+        // Show success toast
+        cbToast(mode === 'move'
+          ? `Etapa movida para "${target.n}"`
+          : `Etapa copiada para "${target.n}"`);
+      }
+    );
+  };
+
+  function cbToast(msg){
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1F2937;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-family:inherit;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.2);z-index:600;animation:cb-fade .2s;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2200);
+    setTimeout(() => t.remove(), 2700);
+  }
+
+  function showTaskPickerModal(title, sourceTask, callback){
+    const ov = document.createElement('div');
+    ov.className = 'cb-tp-ov';
+    const box = document.createElement('div');
+    box.className = 'cb-tp-box';
+    box.innerHTML = `
+      <h3>${title}</h3>
+      <div class="cb-tp-modes">
+        <button data-mode="copy">Copiar (mantém origem)</button>
+        <button data-mode="move">Mover (tira de origem)</button>
+      </div>
+      <input type="text" class="cb-tp-search" placeholder="🔍 Buscar atividade…">
+      <div class="cb-tp-list"></div>
+      <button class="cb-tp-cancel">Cancelar</button>
+    `;
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    let mode = 'copy';
+    function setMode(m){
+      mode = m;
+      box.querySelectorAll('[data-mode]').forEach(b => {
+        b.classList.toggle('sel', b.dataset.mode === m);
+      });
+    }
+    setMode('copy');
+    box.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+    const list = box.querySelector('.cb-tp-list');
+    function renderList(filter){
+      list.innerHTML = '';
+      let curGroup = '';
+      TASKS.forEach(t => {
+        if (t.G){ curGroup = t.G; return; }
+        if (sourceTask && t === sourceTask) return; // skip origem
+        if (filter && !t.n.toLowerCase().includes(filter.toLowerCase())) return;
+        const item = document.createElement('button');
+        item.className = 'cb-tp-item';
+        item.innerHTML = `<span class="grp">${curGroup}</span><span class="nm">${t.n}</span>`;
+        item.onclick = () => { ov.remove(); callback(t.id, mode); };
+        list.appendChild(item);
+      });
+      if (!list.children.length){
+        list.innerHTML = '<div style="text-align:center;color:#9CA3AF;padding:30px;font-size:12px;">Nenhuma atividade encontrada.</div>';
+      }
+    }
+    renderList('');
+    box.querySelector('.cb-tp-search').oninput = (e) => renderList(e.target.value);
+    box.querySelector('.cb-tp-search').focus();
+    box.querySelector('.cb-tp-cancel').onclick = () => ov.remove();
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  }
+
 })();
 </script>
 </body>
