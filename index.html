@@ -3257,6 +3257,279 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
 })();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 2.1 — Página Equipe editável + fotos                         ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase2_1(){
+  const css = `
+.cb-team-page-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin:0 4px 18px 4px;flex-wrap:wrap;gap:12px;}
+.cb-team-page-hdr h2{margin:0;font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:24px;color:var(--cb-navy);letter-spacing:-.5px;}
+.cb-team-page-hdr .sub{font-size:12px;color:var(--cb-ink3);margin-top:4px;}
+.cb-team-add{display:inline-flex;align-items:center;gap:6px;background:var(--cb-coral);color:#fff;border:0;padding:10px 18px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.cb-team-add:hover{background:var(--cb-coral-d);transform:translateY(-1px);}
+.cb-team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.cb-team-card{background:#fff;border:1.5px solid var(--cb-rule);border-radius:14px;padding:20px 16px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;transition:all .18s;}
+.cb-team-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.06);border-color:var(--cb-coral);}
+.cb-team-card.external{border-style:dashed;background:#FFFAF5;}
+.cb-team-photo{width:84px;height:84px;border-radius:50%;background:var(--cb-coral-l);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:var(--cb-coral-d);overflow:hidden;cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 2px var(--cb-rule);transition:all .15s;font-family:'Cabinet Grotesk',sans-serif;position:relative;}
+.cb-team-photo:hover{box-shadow:0 0 0 3px var(--cb-coral);}
+.cb-team-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.cb-team-photo::after{content:'📷';position:absolute;bottom:-2px;right:-2px;background:var(--cb-coral);color:#fff;width:22px;height:22px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;opacity:0;transition:opacity .15s;}
+.cb-team-card:hover .cb-team-photo::after{opacity:1;}
+.cb-team-name{margin-top:14px;font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:14.5px;color:var(--cb-navy);width:100%;text-align:center;border:1px solid transparent;padding:5px 8px;border-radius:6px;outline:none;background:transparent;transition:all .12s;}
+.cb-team-name:hover{border-color:var(--cb-rule);background:#FAFAFA;}
+.cb-team-name:focus{border-color:var(--cb-coral);background:#fff;box-shadow:0 0 0 3px var(--cb-coral-l);}
+.cb-team-role{font-size:11.5px;color:var(--cb-ink3);margin-top:2px;width:100%;text-align:center;border:1px solid transparent;padding:4px 8px;border-radius:6px;outline:none;background:transparent;font-family:inherit;font-weight:500;transition:all .12s;}
+.cb-team-role:hover{border-color:var(--cb-rule);background:#FAFAFA;}
+.cb-team-role:focus{border-color:var(--cb-coral);background:#fff;box-shadow:0 0 0 3px var(--cb-coral-l);}
+.cb-team-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:10px;font-size:9.5px;color:var(--cb-ink3);}
+.cb-team-tags .pill{background:#F0EDF8;padding:2px 7px;border-radius:99px;font-weight:600;}
+.cb-team-ext-badge{position:absolute;top:8px;right:10px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.4px;}
+.cb-team-rm{position:absolute;top:8px;left:8px;background:transparent;border:0;color:#DC2626;font-size:14px;cursor:pointer;opacity:0;transition:opacity .15s;padding:3px 6px;border-radius:4px;}
+.cb-team-card:hover .cb-team-rm{opacity:.7;}
+.cb-team-rm:hover{opacity:1 !important;background:#FEE2E2;}
+.cb-team-ext-toggle{margin-top:8px;font-size:10px;color:var(--cb-ink3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;user-select:none;}
+.cb-team-ext-toggle input{margin:0;accent-color:var(--cb-coral);}
+.cb-import-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 10px;border-radius:6px;cursor:pointer;font-family:'Epilogue',sans-serif;font-size:12px;font-weight:600;margin-left:6px;display:inline-flex;align-items:center;gap:5px;}
+.cb-import-btn:hover{background:rgba(255,255,255,.22);}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id: 'cb-phase21-css', textContent: css }));
+
+  function genId(){
+    return 't_' + Math.random().toString(36).slice(2,7) + Date.now().toString(36).slice(-4);
+  }
+  function initials(name){
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  }
+  function escHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  window.cbRenderTeamPage = function(){
+    const root = document.getElementById('vEquipe');
+    if (!root) return;
+    const team = window.TEAM || [];
+    let scroll = root.querySelector('.page-scroll');
+    if (!scroll){
+      scroll = document.createElement('div');
+      scroll.className = 'page-scroll';
+      root.innerHTML = '';
+      root.appendChild(scroll);
+    }
+    scroll.innerHTML = `
+      <div class="cb-team-page-hdr">
+        <div>
+          <h2>Time de Marketing</h2>
+          <div class="sub">${team.length} integrante${team.length===1?'':'s'} · clique no nome ou cargo pra editar · clique na foto pra trocar</div>
+        </div>
+        <button class="cb-team-add" onclick="cbAddTeamMember()">+ Adicionar integrante</button>
+      </div>
+      <div class="cb-team-grid" id="cb-team-grid"></div>
+    `;
+    const grid = scroll.querySelector('#cb-team-grid');
+    team.forEach((m) => {
+      const card = document.createElement('div');
+      card.className = 'cb-team-card' + (m.external ? ' external' : '');
+      card.dataset.mid = m.id;
+      card.innerHTML = `
+        ${m.external ? '<span class="cb-team-ext-badge">externo</span>' : ''}
+        <button class="cb-team-rm" title="Remover" data-act="remove">✕</button>
+        <div class="cb-team-photo" data-act="photo">${
+          m.photo_url
+            ? `<img src="${escHtml(m.photo_url)}" alt="${escHtml(m.name)}">`
+            : escHtml(initials(m.name))
+        }</div>
+        <input class="cb-team-name" value="${escHtml(m.name)}" data-field="name" placeholder="Nome">
+        <input class="cb-team-role" value="${escHtml(m.role||'')}" data-field="role" placeholder="Cargo / função">
+        <label class="cb-team-ext-toggle" title="Marca como recurso externo (terceiro)">
+          <input type="checkbox" data-field="external" ${m.external?'checked':''}> externo
+        </label>
+      `;
+      grid.appendChild(card);
+    });
+    // Wire handlers
+    grid.querySelectorAll('.cb-team-card').forEach(card => {
+      const mid = card.dataset.mid;
+      card.querySelectorAll('input[data-field]').forEach(el => {
+        if (el.type === 'checkbox'){
+          el.onchange = () => {
+            cbUpdateMemberField(mid, el.dataset.field, el.checked);
+            cbRenderTeamPage();
+          };
+        } else {
+          el.onchange = () => cbUpdateMemberField(mid, el.dataset.field, el.value);
+          el.onkeydown = (e) => { if (e.key === 'Enter') el.blur(); };
+        }
+      });
+      const photoBtn = card.querySelector('[data-act="photo"]');
+      if (photoBtn) photoBtn.onclick = () => cbUploadMemberPhoto(mid);
+      const rmBtn = card.querySelector('[data-act="remove"]');
+      if (rmBtn) rmBtn.onclick = () => cbRemoveTeamMember(mid);
+    });
+  };
+
+  window.cbUpdateMemberField = function(memberId, field, value){
+    const m = (window.TEAM || []).find(x => x.id === memberId);
+    if (!m) return;
+    m[field] = (typeof value === 'string') ? value.trim() : value;
+    if (typeof renderTasks === 'function') renderTasks();
+  };
+
+  window.cbAddTeamMember = function(){
+    const id = genId();
+    window.TEAM = window.TEAM || [];
+    window.TEAM.push({ id, name: 'Novo Integrante', role: 'Função', active: true });
+    cbRenderTeamPage();
+    if (typeof renderTasks === 'function') renderTasks();
+    // Foco no nome do recém-criado
+    setTimeout(() => {
+      const card = document.querySelector(`.cb-team-card[data-mid="${id}"]`);
+      const inp = card?.querySelector('.cb-team-name');
+      if (inp) { inp.select(); inp.focus(); }
+    }, 80);
+  };
+
+  window.cbRemoveTeamMember = function(memberId){
+    const m = (window.TEAM || []).find(x => x.id === memberId);
+    if (!m) return;
+    // Conta quantas etapas referenciam esse id
+    let refs = 0;
+    TASKS.forEach(t => {
+      if (t.G) return;
+      (t.segs||[]).forEach(s => {
+        if (Array.isArray(s.owners) && s.owners.includes(memberId)) refs++;
+      });
+    });
+    const msg = `Remover ${m.name} do time?` +
+      (refs > 0 ? `\n\n${refs} etapa(s) tem ${m.name} marcado como responsável — a referência será removida nelas também.` : '');
+    if (!confirm(msg)) return;
+    window.TEAM = window.TEAM.filter(x => x.id !== memberId);
+    // Limpa referências em owners
+    TASKS.forEach(t => {
+      if (t.G) return;
+      (t.segs||[]).forEach(s => {
+        if (Array.isArray(s.owners)){
+          s.owners = s.owners.filter(o => o !== memberId);
+        }
+      });
+    });
+    cbRenderTeamPage();
+    if (typeof renderTasks === 'function') renderTasks();
+  };
+
+  window.cbUploadMemberPhoto = function(memberId){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 4*1024*1024){ alert('Foto até 4MB'); return; }
+      const cfg = window.CB_SUPABASE;
+      if (!cfg || !window.supabase){ alert('Supabase indisponível'); return; }
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      const ext = (file.name.split('.').pop()||'png').toLowerCase();
+      const path = `team/${memberId}_${Date.now()}.${ext}`;
+      try {
+        const { error } = await sb.storage.from('roadmap-attachments').upload(path, file);
+        if (error) throw error;
+        const { data: urlData } = sb.storage.from('roadmap-attachments').getPublicUrl(path);
+        const m = (window.TEAM||[]).find(x => x.id === memberId);
+        if (m) m.photo_url = urlData.publicUrl;
+        cbRenderTeamPage();
+        if (typeof renderTasks === 'function') renderTasks();
+      } catch(err){
+        alert('Erro ao subir foto: ' + err.message);
+      }
+    };
+    input.click();
+  };
+
+  // Hook setView para re-renderizar Equipe quando aberta
+  const _origSetView21 = window.setView;
+  if (typeof _origSetView21 === 'function'){
+    window.setView = function(v){
+      _origSetView21.call(this, v);
+      if (v === 'equipe') {
+        try { cbRenderTeamPage(); } catch(e){ console.error(e); }
+      }
+    };
+  }
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 2.2 — Importar backup                                         ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase2_2(){
+  function setupImportButton(){
+    const backupBtn = document.getElementById('cb-backup-btn');
+    if (!backupBtn || document.getElementById('cb-import-btn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'cb-import-btn';
+    btn.className = 'cb-import-btn';
+    btn.title = 'Importar backup (JSON)';
+    btn.innerHTML = '📥 Importar';
+    btn.onclick = window.cbImportBackup;
+    backupBtn.parentElement.insertBefore(btn, backupBtn.nextSibling);
+  }
+
+  window.cbImportBackup = function(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!Array.isArray(data.tasks)) throw new Error('JSON inválido — não tem campo "tasks".');
+        const tasksCount = data.tasks.length;
+        const raciCount = (data.raci_data||[]).length;
+        const teamCount = (data.team||[]).length;
+        const exportedAt = data.exported_at ? '\n• Exportado em: ' + new Date(data.exported_at).toLocaleString('pt-BR') : '';
+        const ok = confirm(
+          `Importar este backup?\n\n` +
+          `• ${tasksCount} tarefas\n` +
+          `• ${raciCount} linhas RACI\n` +
+          `• ${teamCount} integrantes` + exportedAt + `\n\n` +
+          `Isso substitui TUDO no roadmap atual. Pode usar Ctrl+Z se quiser desfazer.`
+        );
+        if (!ok) return;
+        TASKS.length = 0; data.tasks.forEach(x => TASKS.push(x));
+        if (Array.isArray(data.raci_data)){
+          RACI_DATA.length = 0; data.raci_data.forEach(x => RACI_DATA.push(x));
+        }
+        if (Array.isArray(data.team) && data.team.length) window.TEAM = data.team.slice();
+        if (data.branding && typeof data.branding === 'object'){
+          window.cbBrand = data.branding;
+          if (typeof window.cbApplyBrandLogo === 'function') cbApplyBrandLogo();
+        }
+        if (typeof renderTasks === 'function') renderTasks();
+        if (typeof updateAlerts === 'function') updateAlerts();
+        if (typeof updateCounts === 'function') updateCounts();
+        if (typeof raciBuilt !== 'undefined' && raciBuilt){
+          raciBuilt = false;
+          if (typeof buildRaciTable === 'function') buildRaciTable();
+        }
+        if (typeof window.cbRenderTeamPage === 'function') cbRenderTeamPage();
+        alert('✅ Backup importado!');
+      } catch(err){
+        alert('Erro ao importar: ' + err.message);
+      }
+    };
+    input.click();
+  };
+
+  function boot(){ setupImportButton(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  setTimeout(boot, 1500);
+})();
 </script>
 </body>
 </html>
