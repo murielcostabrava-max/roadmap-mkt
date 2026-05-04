@@ -3005,10 +3005,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   });
 
-  // ── Drag/resize em ocorrências (somente segs originais com t==='occ' && !freq) ─
+  // ── Drag em TODAS as ocorrências (standalone + recorrência) ─────────
+  // Standalone (t='occ' sem freq) → drag + resize livre
+  // Freq-expanded (filhos de seg com freq) → drag move a SÉRIE INTEIRA (parent seg)
   function setupOccDrag(){
     const cv = document.getElementById('canvas');
-    if (!cv || typeof visibleTasks !== 'function' || typeof xp !== 'function') return;
+    if (!cv || typeof visibleTasks !== 'function' || typeof xp !== 'function' || typeof dw !== 'function') return;
     const visTasks = visibleTasks().filter(t => !t.G);
     const rows = cv.querySelectorAll('.canvas-t-row');
     const SC = window.SC || {};
@@ -3018,38 +3020,61 @@ document.addEventListener('DOMContentLoaded',()=>{
       if (!task) return;
       const occBars = row.querySelectorAll('.seg-occ');
       if (!occBars.length) return;
-      // Pega segs originais com t==='occ' e SEM freq (não expandidas de recorrência)
-      const origOccs = (task.segs||[]).filter(s => s.t === 'occ' && !s.freq);
-      if (!origOccs.length) return;
+      const segs = task.segs || [];
+      const standaloneOccs = segs.filter(s => s.t === 'occ' && !s.freq);
+      const freqSegs       = segs.filter(s => s.freq);
       occBars.forEach(bar => {
         if (bar.dataset.occDragSetup) return;
         const left = parseFloat(bar.style.left || '0');
-        // Match bar position com xp(seg.s)+2
-        const matched = origOccs.find(s => {
+        // 1) Tenta standalone occ pela posição exata
+        let matched = standaloneOccs.find(s => {
           try { return Math.abs(xp(s.s) + 2 - left) < 4; } catch(e){ return false; }
         });
+        let isStandalone = !!matched;
+        // 2) Se não casou, é filho de uma freq — acha o parent que cobre essa posição
+        if (!matched && freqSegs.length){
+          matched = freqSegs.find(s => {
+            try {
+              const ls = xp(s.s);
+              const le = xp(s.e) + dw();
+              return left >= ls - 2 && left <= le + 2;
+            } catch(e){ return false; }
+          });
+        }
         if (!matched) return;
         bar.dataset.occDragSetup = '1';
-        // Adiciona handles de resize
-        if (!bar.querySelector('.seg-handle-l')){
-          const lh = document.createElement('div');
-          lh.className = 'seg-handle seg-handle-l';
-          lh.title = 'Arrastar início';
-          bar.appendChild(lh);
-          if (typeof window.makeResizable === 'function'){
-            window.makeResizable(lh, bar, task, matched, matched, 'left', occStyle);
+        bar.dataset.occType = isStandalone ? 'single' : 'recurring';
+        // Standalone: handles de resize. Recorrência: só drag (mover toda a série).
+        if (isStandalone){
+          if (!bar.querySelector('.seg-handle-l')){
+            const lh = document.createElement('div');
+            lh.className = 'seg-handle seg-handle-l';
+            lh.title = 'Arrastar início';
+            bar.appendChild(lh);
+            if (typeof window.makeResizable === 'function'){
+              window.makeResizable(lh, bar, task, matched, matched, 'left', occStyle);
+            }
           }
-        }
-        if (!bar.querySelector('.seg-handle-r')){
-          const rh = document.createElement('div');
-          rh.className = 'seg-handle seg-handle-r';
-          rh.title = 'Arrastar fim';
-          bar.appendChild(rh);
-          if (typeof window.makeResizable === 'function'){
-            window.makeResizable(rh, bar, task, matched, matched, 'right', occStyle);
+          if (!bar.querySelector('.seg-handle-r')){
+            const rh = document.createElement('div');
+            rh.className = 'seg-handle seg-handle-r';
+            rh.title = 'Arrastar fim';
+            bar.appendChild(rh);
+            if (typeof window.makeResizable === 'function'){
+              window.makeResizable(rh, bar, task, matched, matched, 'right', occStyle);
+            }
           }
+          if (bar.title && !bar.title.includes('Arraste')) bar.title += '\n↔ Arraste pra mover · Handles laterais redimensionam';
+        } else {
+          // Recurring: tooltip diferente
+          const orig = bar.title || '';
+          if (!orig.includes('série inteira')){
+            bar.title = orig + '\n🔁 Arraste pra mover a série inteira (toda a recorrência)';
+          }
+          // Visual hint: cursor diferente
+          bar.style.cursor = 'grab';
         }
-        // Drag pra mover
+        // Drag (em ambos os casos — para recurring move o parent freq seg)
         if (typeof window.makeDraggable === 'function'){
           window.makeDraggable(bar, task, matched, matched, occStyle);
         }
