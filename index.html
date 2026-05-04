@@ -1575,7 +1575,8 @@ document.addEventListener('DOMContentLoaded',()=>{
         .update({
           tasks: TASKS,
           raci_data: RACI_DATA,
-          team: window.TEAM || []
+          team: window.TEAM || [],
+          branding: window.cbBrand || {}
         })
         .eq('id', cfg.ROW_ID || 'main');
       if (error) throw error;
@@ -1604,6 +1605,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       if (Array.isArray(data.team) && data.team.length){
         window.TEAM = data.team.slice();
       }
+      if (data.branding && typeof data.branding === 'object'){
+        window.cbBrand = data.branding;
+        if (typeof window.cbApplyBrandLogo === 'function') window.cbApplyBrandLogo();
+      }
       // Re-render tudo
       if (typeof renderHeader === 'function') renderHeader();
       if (typeof renderTasks === 'function') renderTasks();
@@ -1629,7 +1634,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     try {
       const { data, error } = await sb
         .from('roadmap_state')
-        .select('tasks, raci_data, team, updated_at')
+        .select('tasks, raci_data, team, branding, updated_at')
         .eq('id', cfg.ROW_ID || 'main')
         .single();
       if (error) throw error;
@@ -2662,6 +2667,415 @@ document.addEventListener('DOMContentLoaded',()=>{
     boot15();
   }
 
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 1.6 — AJUSTES                                                 ║
+   ║  - Logo customizável (upload PNG/SVG via Storage)                   ║
+   ║  - Remove "Eu sou" selector → identificação por modal único        ║
+   ║  - Datas default = hoje em adicionar atividade/etapa                ║
+   ║  - Drag / resize em barras de Ocorrência                            ║
+   ║  - Undo / Redo (botões + Ctrl+Z / Ctrl+Y)                           ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase1_6(){
+  // ── CSS adicional ────────────────────────────────────────────────────
+  const css = `
+.cb-logo{display:none !important;}
+.brand-wave{display:none !important;}
+.cb-brand-slot{position:relative;display:inline-flex;align-items:center;cursor:pointer;border-radius:6px;padding:4px 6px;transition:background .15s;height:42px;box-sizing:border-box;}
+.cb-brand-slot:hover{background:rgba(255,255,255,.06);}
+.cb-brand-slot img{max-height:34px;max-width:200px;width:auto;display:block;object-fit:contain;}
+.cb-brand-slot .cb-brand-fallback{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.4px;color:#fff;}
+.cb-brand-slot .cb-logo-edit{position:absolute;top:-4px;right:-4px;background:var(--cb-coral);color:#fff;border:0;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.cb-brand-slot:hover .cb-logo-edit{opacity:1;}
+.cb-iam{display:none !important;}
+.cb-iden-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:center;justify-content:center;animation:cb-fade .2s;}
+@keyframes cb-fade{from{opacity:0;}to{opacity:1;}}
+.cb-iden-box{background:#fff;border-radius:14px;padding:22px 22px 18px;max-width:420px;width:92%;box-shadow:0 14px 40px rgba(0,0,0,.25);}
+.cb-iden-box h3{margin:0 0 6px 0;font-family:'Cabinet Grotesk',sans-serif;font-size:20px;color:var(--cb-navy);font-weight:800;}
+.cb-iden-box p{margin:0 0 16px 0;font-size:12.5px;color:var(--cb-ink2);line-height:1.4;}
+.cb-iden-list{display:flex;flex-direction:column;gap:5px;}
+.cb-iden-item{background:#fff;border:1.5px solid var(--cb-rule);border-radius:8px;padding:10px 14px;font-size:13px;text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:flex-start;transition:all .15s;}
+.cb-iden-item:hover{border-color:var(--cb-coral);background:var(--cb-coral-l);}
+.cb-iden-item .nm{font-weight:700;color:var(--cb-navy);}
+.cb-iden-item .rl{font-size:11px;color:var(--cb-ink3);margin-top:1px;}
+.cb-undo-btn,.cb-redo-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;margin-left:6px;min-width:34px;font-family:inherit;}
+.cb-undo-btn:hover:not(:disabled),.cb-redo-btn:hover:not(:disabled){background:rgba(255,255,255,.22);}
+.cb-undo-btn:disabled,.cb-redo-btn:disabled{opacity:.35;cursor:not-allowed;}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id: 'cb-phase16-css', textContent: css }));
+
+  // ── Remove "Eu sou" do topbar (se ainda estiver lá) ─────────────────
+  function removeIamSelector(){
+    const iam = document.getElementById('cb-iam');
+    if (iam) iam.remove();
+  }
+
+  // ── Modal de identificação único ────────────────────────────────────
+  function showIdentifyModal(callback){
+    if (document.querySelector('.cb-iden-ov')) return; // já aberto
+    const ov = document.createElement('div');
+    ov.className = 'cb-iden-ov';
+    const box = document.createElement('div');
+    box.className = 'cb-iden-box';
+    box.innerHTML = `
+      <h3>Quem é você?</h3>
+      <p>Pra registrar quem fez cada edição. Só pergunto uma vez — depois fica salvo no seu navegador.</p>
+      <div class="cb-iden-list" id="cb-iden-list"></div>
+    `;
+    const list = box.querySelector('#cb-iden-list');
+    (window.cbGetTeam ? cbGetTeam() : []).forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = 'cb-iden-item';
+      btn.innerHTML = `<span class="nm">${m.name}</span><span class="rl">${m.role||''}${m.external?' • externo':''}</span>`;
+      btn.onclick = () => { ov.remove(); callback(m.id); };
+      list.appendChild(btn);
+    });
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+  }
+
+  function ensureEditorIdentified(callback){
+    let id = localStorage.getItem('cb_iam');
+    if (id) {
+      const m = window.cbFindMember ? cbFindMember(id) : null;
+      if (m) { callback({ id: m.id, name: m.name }); return; }
+    }
+    showIdentifyModal((selectedId) => {
+      localStorage.setItem('cb_iam', selectedId || '');
+      const m = selectedId && window.cbFindMember ? cbFindMember(selectedId) : null;
+      callback(m ? { id: m.id, name: m.name } : { id: null, name: 'Anônimo' });
+    });
+  }
+  window.cbEnsureEditor = ensureEditorIdentified;
+
+  // Wrap saveEdit / cbSaveTaskPanel / confirmAddRow para garantir identificação
+  ['saveEdit', 'cbSaveTaskPanel', 'confirmAddRow'].forEach(fnName => {
+    const orig = window[fnName];
+    if (typeof orig !== 'function') return;
+    window[fnName] = function(){
+      const args = arguments;
+      const self = this;
+      ensureEditorIdentified(() => {
+        orig.apply(self, args);
+      });
+    };
+  });
+
+  // ── Logo customizável ───────────────────────────────────────────────
+  window.cbBrand = window.cbBrand || {};
+
+  function setupBrandUI(){
+    const brand = document.querySelector('.brand');
+    if (!brand) return;
+    // Limpa o brand mantendo apenas o todayChip
+    const todayChip = document.getElementById('todayChip');
+    brand.innerHTML = '';
+    const slot = document.createElement('div');
+    slot.className = 'cb-brand-slot';
+    slot.id = 'cb-brand-slot';
+    slot.innerHTML = `
+      <img id="cb-brand-logo" alt="Logo" style="display:none;" />
+      <span class="cb-brand-fallback" id="cb-brand-fallback">Costa Brava</span>
+      <button class="cb-logo-edit" id="cb-logo-edit-btn" title="Trocar logo">📷</button>
+    `;
+    brand.appendChild(slot);
+    if (todayChip) brand.appendChild(todayChip);
+    slot.onclick = () => window.cbChangeLogo();
+    document.getElementById('cb-logo-edit-btn').onclick = (e) => {
+      e.stopPropagation();
+      window.cbChangeLogo();
+    };
+    cbApplyBrandLogo();
+  }
+
+  window.cbApplyBrandLogo = function(){
+    const img = document.getElementById('cb-brand-logo');
+    const fb = document.getElementById('cb-brand-fallback');
+    const url = window.cbBrand && window.cbBrand.logo_url;
+    if (img){
+      if (url){ img.src = url; img.style.display = ''; }
+      else img.style.display = 'none';
+    }
+    if (fb) fb.style.display = url ? 'none' : '';
+  };
+
+  window.cbChangeLogo = function(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 8 * 1024 * 1024){
+        alert('Logo até 8MB');
+        return;
+      }
+      const cfg = window.CB_SUPABASE;
+      if (!cfg || !window.supabase){ alert('Supabase não configurado.'); return; }
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const path = `branding/logo_${Date.now()}.${ext}`;
+      try {
+        const { error } = await sb.storage.from('roadmap-attachments').upload(path, file);
+        if (error) throw error;
+        const { data: urlData } = sb.storage.from('roadmap-attachments').getPublicUrl(path);
+        window.cbBrand = window.cbBrand || {};
+        window.cbBrand.logo_url = urlData.publicUrl;
+        cbApplyBrandLogo();
+        await sb.from('roadmap_state').update({ branding: window.cbBrand }).eq('id', 'main');
+      } catch(err){
+        console.error('[logo upload]', err);
+        alert('Erro ao subir o logo: ' + err.message);
+      }
+    };
+    input.click();
+  };
+
+  async function loadBrand(){
+    const cfg = window.CB_SUPABASE;
+    if (!cfg || !window.supabase) return;
+    try {
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      const { data } = await sb.from('roadmap_state').select('branding').eq('id', 'main').single();
+      if (data && data.branding && typeof data.branding === 'object'){
+        window.cbBrand = data.branding;
+        cbApplyBrandLogo();
+      }
+    } catch(e){ /* silent */ }
+  }
+
+  // ── Datas default = hoje ────────────────────────────────────────────
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function plusDaysISO(n){
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0,10);
+  }
+
+  // openAddRow: sobrescreve datas padrão
+  const _origOpenAddRow16 = window.openAddRow;
+  if (typeof _origOpenAddRow16 === 'function'){
+    window.openAddRow = function(){
+      _origOpenAddRow16.apply(this, arguments);
+      const inS = document.getElementById('newS');
+      const inE = document.getElementById('newE');
+      if (inS) inS.value = todayISO();
+      if (inE) inE.value = plusDaysISO(30);
+    };
+  }
+
+  // addSegType: força datas = hoje no novo seg
+  const _origAddSegType16 = window.addSegType;
+  if (typeof _origAddSegType16 === 'function'){
+    window.addSegType = function(type){
+      _origAddSegType16.call(this, type);
+      try {
+        if (typeof ET !== 'undefined' && ET && ET.segs){
+          const last = ET.segs[ET.segs.length-1];
+          if (last){
+            const t = todayISO();
+            const e30 = plusDaysISO(14);
+            last.s = t;
+            last.e = e30;
+            const inS = document.getElementById('inS');
+            const inE = document.getElementById('inE');
+            if (inS) inS.value = t;
+            if (inE) inE.value = e30;
+          }
+        }
+      } catch(err){}
+    };
+  }
+
+  // ── Undo / Redo ─────────────────────────────────────────────────────
+  const cbHist = { stack: [], idx: -1, limit: 50, applying: false };
+
+  function cbHistSnapshot(){
+    return JSON.stringify({
+      t: TASKS,
+      r: RACI_DATA,
+      m: window.TEAM,
+      b: window.cbBrand
+    });
+  }
+
+  function cbHistApply(snap){
+    let data;
+    try { data = JSON.parse(snap); } catch(e){ return; }
+    cbHist.applying = true;
+    try {
+      if (Array.isArray(data.t)) { TASKS.length = 0; data.t.forEach(x => TASKS.push(x)); }
+      if (Array.isArray(data.r)) { RACI_DATA.length = 0; data.r.forEach(x => RACI_DATA.push(x)); }
+      if (Array.isArray(data.m)) window.TEAM = data.m.slice();
+      if (data.b) { window.cbBrand = data.b; cbApplyBrandLogo(); }
+      if (typeof renderTasks === 'function') renderTasks();
+      if (typeof updateAlerts === 'function') updateAlerts();
+      if (typeof updateCounts === 'function') updateCounts();
+      if (typeof raciBuilt !== 'undefined' && raciBuilt){
+        raciBuilt = false;
+        if (typeof buildRaciTable === 'function') buildRaciTable();
+      }
+    } finally {
+      cbHist.applying = false;
+    }
+  }
+
+  function cbHistPush(){
+    if (cbHist.applying) return;
+    const snap = cbHistSnapshot();
+    if (cbHist.stack[cbHist.idx] === snap) return;
+    cbHist.stack.length = cbHist.idx + 1;
+    cbHist.stack.push(snap);
+    if (cbHist.stack.length > cbHist.limit) {
+      cbHist.stack.shift();
+    } else {
+      cbHist.idx++;
+    }
+    updateUndoRedoUI();
+  }
+
+  window.cbUndo = function(){
+    if (cbHist.idx <= 0) return;
+    cbHist.idx--;
+    cbHistApply(cbHist.stack[cbHist.idx]);
+    updateUndoRedoUI();
+  };
+  window.cbRedo = function(){
+    if (cbHist.idx >= cbHist.stack.length - 1) return;
+    cbHist.idx++;
+    cbHistApply(cbHist.stack[cbHist.idx]);
+    updateUndoRedoUI();
+  };
+
+  function updateUndoRedoUI(){
+    const u = document.getElementById('cb-undo');
+    const r = document.getElementById('cb-redo');
+    if (u) u.disabled = cbHist.idx <= 0;
+    if (r) r.disabled = cbHist.idx >= cbHist.stack.length - 1;
+  }
+
+  function setupUndoRedoButtons(){
+    const right = document.querySelector('.topbar-right');
+    if (!right || document.getElementById('cb-undo')) return;
+    const u = document.createElement('button');
+    u.id = 'cb-undo';
+    u.className = 'cb-undo-btn';
+    u.title = 'Desfazer (Ctrl+Z)';
+    u.textContent = '↶';
+    u.onclick = window.cbUndo;
+    const r = document.createElement('button');
+    r.id = 'cb-redo';
+    r.className = 'cb-redo-btn';
+    r.title = 'Refazer (Ctrl+Y / Ctrl+Shift+Z)';
+    r.textContent = '↷';
+    r.onclick = window.cbRedo;
+    right.insertBefore(r, right.firstChild);
+    right.insertBefore(u, r);
+    updateUndoRedoUI();
+  }
+
+  // Atalhos de teclado
+  document.addEventListener('keydown', e => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (!mod) return;
+    const key = (e.key || '').toLowerCase();
+    if (key === 'z' && !e.shiftKey){
+      // Ctrl+Z = undo
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      e.preventDefault();
+      window.cbUndo();
+    } else if ((key === 'y') || (key === 'z' && e.shiftKey)){
+      // Ctrl+Y ou Ctrl+Shift+Z = redo
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      e.preventDefault();
+      window.cbRedo();
+    }
+  });
+
+  // ── Drag/resize em ocorrências (somente segs originais com t==='occ' && !freq) ─
+  function setupOccDrag(){
+    const cv = document.getElementById('canvas');
+    if (!cv || typeof visibleTasks !== 'function' || typeof xp !== 'function') return;
+    const visTasks = visibleTasks().filter(t => !t.G);
+    const rows = cv.querySelectorAll('.canvas-t-row');
+    const SC = window.SC || {};
+    const occStyle = SC.occ || { bg:'#FCE7F3', b:'#F9A8D4', t:'#9D174D', lbl:'Ocorrência' };
+    rows.forEach((row, idx) => {
+      const task = visTasks[idx];
+      if (!task) return;
+      const occBars = row.querySelectorAll('.seg-occ');
+      if (!occBars.length) return;
+      // Pega segs originais com t==='occ' e SEM freq (não expandidas de recorrência)
+      const origOccs = (task.segs||[]).filter(s => s.t === 'occ' && !s.freq);
+      if (!origOccs.length) return;
+      occBars.forEach(bar => {
+        if (bar.dataset.occDragSetup) return;
+        const left = parseFloat(bar.style.left || '0');
+        // Match bar position com xp(seg.s)+2
+        const matched = origOccs.find(s => {
+          try { return Math.abs(xp(s.s) + 2 - left) < 4; } catch(e){ return false; }
+        });
+        if (!matched) return;
+        bar.dataset.occDragSetup = '1';
+        // Adiciona handles de resize
+        if (!bar.querySelector('.seg-handle-l')){
+          const lh = document.createElement('div');
+          lh.className = 'seg-handle seg-handle-l';
+          lh.title = 'Arrastar início';
+          bar.appendChild(lh);
+          if (typeof window.makeResizable === 'function'){
+            window.makeResizable(lh, bar, task, matched, matched, 'left', occStyle);
+          }
+        }
+        if (!bar.querySelector('.seg-handle-r')){
+          const rh = document.createElement('div');
+          rh.className = 'seg-handle seg-handle-r';
+          rh.title = 'Arrastar fim';
+          bar.appendChild(rh);
+          if (typeof window.makeResizable === 'function'){
+            window.makeResizable(rh, bar, task, matched, matched, 'right', occStyle);
+          }
+        }
+        // Drag pra mover
+        if (typeof window.makeDraggable === 'function'){
+          window.makeDraggable(bar, task, matched, matched, occStyle);
+        }
+      });
+    });
+  }
+
+  // ── Hook único pós-render para tudo da Fase 1.6 ─────────────────────
+  const _origRender16 = window.renderTasks;
+  window.renderTasks = function(){
+    const r = _origRender16.apply(this, arguments);
+    try {
+      setTimeout(() => {
+        setupOccDrag();
+        cbHistPush();
+      }, 60);
+    } catch(e){ console.error('[CB Phase1.6 hook]', e); }
+    return r;
+  };
+
+  // ── Boot ────────────────────────────────────────────────────────────
+  function boot16(){
+    setupBrandUI();
+    setupUndoRedoButtons();
+    removeIamSelector();
+    loadBrand();
+    // Snapshot inicial após settled
+    setTimeout(() => {
+      cbHistPush();
+      removeIamSelector(); // garantir
+    }, 1500);
+    setTimeout(removeIamSelector, 3500);
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot16);
+  } else {
+    boot16();
+  }
 })();
 </script>
 </body>
