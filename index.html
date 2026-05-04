@@ -3530,6 +3530,370 @@ document.addEventListener('DOMContentLoaded',()=>{
   else boot();
   setTimeout(boot, 1500);
 })();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 2.3 — Fases / Cadência dinâmicas (lendo de TASKS)            ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase2_3(){
+  const css = `
+.cb-tip{background:var(--cb-coral-l);border:1px solid var(--cb-coral);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--cb-coral-d);display:flex;gap:10px;align-items:flex-start;line-height:1.45;}
+.cad-dot.bu-corp{background:var(--corp);}
+.cad-dot.bu-live{background:var(--live);}
+.cad-dot.bu-you{background:var(--you);}
+.cad-dot.bu-endo{background:var(--endo);}
+.cad-dot.bu-cs{background:var(--cs,#16A34A);}
+.cad-dot.bu-tech{background:var(--tech,#7C3AED);}
+.cad-dot.bu-geral{background:var(--cb-ink3);}
+.cad-dot.bu-all{background:var(--cb-coral);}
+.phase-empty{color:#9CA3AF;font-size:11.5px;font-style:italic;padding:8px 4px;text-align:center;}
+.phase-item-meta{display:inline-block;background:#F0EDF8;color:var(--cb-ink3);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:6px;letter-spacing:.4px;}
+.phase-item-text{cursor:default;}
+.cad-card .cad-label{margin-top:0;font-size:10px;color:var(--cb-ink3);font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id: 'cb-phase23-css', textContent: css }));
+
+  const escHtml = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const PHASE_CONFIG = [
+    { num: 1, name: 'Base & Estrutura',     period: 'Mai—Jun 2026', color: '#DC2626', bg: '#FEF2F2' },
+    { num: 2, name: 'Ativação & Tração',    period: 'Jul—Set 2026', color: '#D97706', bg: '#FFFBEB' },
+    { num: 3, name: 'Escala & Retenção',    period: 'Out—Dez 2026', color: '#059669', bg: '#F0FDF4' },
+    { num: 4, name: 'Otimização & Expansão',period: 'Jan—Abr 2027', color: '#2563EB', bg: '#EFF6FF' }
+  ];
+
+  window.cbRenderFasesPage = function(){
+    const root = document.getElementById('vFases');
+    if (!root) return;
+    let scroll = root.querySelector('.page-scroll');
+    if (!scroll){ scroll = document.createElement('div'); scroll.className='page-scroll'; root.innerHTML=''; root.appendChild(scroll); }
+    const byWave = { 1:[], 2:[], 3:[], 4:[], 0:[] };
+    TASKS.forEach(t => {
+      if (t.G) return;
+      const w = t.wave;
+      if (w >= 1 && w <= 4) byWave[w].push(t);
+      else byWave[0].push(t);
+    });
+    let html = '<div class="section">' +
+      '<div class="section-header"><span class="section-num">03</span><span class="section-title">Fases do Plano</span></div>' +
+      '<div class="cb-tip">💡 As fases agora vêm direto do roadmap — cada atividade tem um <strong>wave</strong> (1, 2, 3 ou 4). Quando você adiciona/edita uma atividade, esta página atualiza automaticamente.</div>' +
+      '<div class="phases-grid">';
+    PHASE_CONFIG.forEach(p => {
+      const tasks = byWave[p.num];
+      html += `
+        <div class="phase-block">
+          <div class="phase-header" style="background:${p.bg};">
+            <div class="phase-badge" style="color:${p.color};"><span class="phase-badge-dot" style="background:${p.color};"></span>FASE ${p.num}</div>
+            <div class="phase-name">${escHtml(p.name)}</div>
+            <div class="phase-period">${escHtml(p.period)}</div>
+          </div>
+          <div class="phase-body">
+            ${tasks.length ? tasks.map(t => {
+              const buBadge = (t.bu && t.bu[0]) ? `<span class="phase-item-meta">${escHtml(String(t.bu[0]).toUpperCase())}</span>` : '';
+              const noteAttr = t.waveNote ? ` title="${escHtml(t.waveNote)}"` : '';
+              return `<div class="phase-item"${noteAttr}><span class="phase-dot" style="background:${p.color};"></span><span class="phase-item-text">${escHtml(t.n)}${buBadge}</span></div>`;
+            }).join('') : '<div class="phase-empty">Sem atividades nesta fase ainda.</div>'}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    if (byWave[0].length){
+      html += `<div style="margin-top:18px;font-size:12px;color:var(--cb-ink3);padding:0 4px;"><strong>${byWave[0].length}</strong> atividade${byWave[0].length===1?'':'s'} sem fase definida (campo <code>wave</code> vazio no JSON).</div>`;
+    }
+    html += '</div>';
+    scroll.innerHTML = html;
+  };
+
+  const FREQ_DEF = [
+    { k: '2x_week',       lbl: '2× por semana',         color: 'var(--cb-coral)' },
+    { k: 'weekly',        lbl: '1× por semana',         color: 'var(--cb-coral-d)' },
+    { k: '2x_month',      lbl: '2× por mês (S1+S3)',    color: 'var(--cb-navy)' },
+    { k: '2x_month_blog', lbl: '2× por mês (S2+S4)',    color: 'var(--cb-navy-mid)' },
+    { k: 'monthly',       lbl: 'Mensal',                color: 'var(--cb-teal,#0F766E)' },
+    { k: 'quarterly',     lbl: 'Trimestral',            color: '#059669' },
+    { k: 'semestral',     lbl: 'Semestral',             color: '#2563EB' }
+  ];
+
+  window.cbRenderCadenciaPage = function(){
+    const root = document.getElementById('vCadencia');
+    if (!root) return;
+    let scroll = root.querySelector('.page-scroll');
+    if (!scroll){ scroll = document.createElement('div'); scroll.className='page-scroll'; root.innerHTML=''; root.appendChild(scroll); }
+    const byFreq = {};
+    TASKS.forEach(t => {
+      if (t.G) return;
+      (t.segs||[]).forEach(s => {
+        if (s.freq){
+          byFreq[s.freq] = byFreq[s.freq] || [];
+          byFreq[s.freq].push({ task: t, seg: s });
+        }
+      });
+    });
+    const cadCount = Object.values(byFreq).reduce((a,b) => a + b.length, 0);
+    let html = '<div class="section">' +
+      '<div class="section-header"><span class="section-num">04</span><span class="section-title">Cadência de Entregas</span></div>' +
+      `<div class="cb-tip">💡 ${cadCount} entrega${cadCount===1?'':'s'} recorrente${cadCount===1?'':'s'} no roadmap. Esta página agrupa as etapas com <strong>freq</strong> setado — quando você muda a frequência de uma etapa pelo Gantt, aqui atualiza.</div>` +
+      '<div class="cad-grid">';
+    let any = false;
+    FREQ_DEF.forEach(f => {
+      const items = byFreq[f.k] || [];
+      if (!items.length) return;
+      any = true;
+      html += `
+        <div class="cad-card" style="border-top:4px solid ${f.color};">
+          <div class="cad-freq" style="color:${f.color};">${escHtml(f.lbl)}</div>
+          <div class="cad-label">${items.length} item${items.length===1?'':'s'}</div>
+          <div class="cad-items">
+            ${items.map(it => `
+              <div class="cad-item">
+                <span class="cad-dot bu-${(it.task.bu&&it.task.bu[0])||'corp'}"></span>
+                ${escHtml(it.task.n)}${it.seg.lbl ? ` <span style="color:var(--cb-ink3);font-size:10px;">· ${escHtml(it.seg.lbl)}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+    if (!any){
+      html += '<div class="phase-empty" style="grid-column:1/-1;padding:40px;">Nenhuma etapa com cadência definida.</div>';
+    }
+    html += '</div></div>';
+    scroll.innerHTML = html;
+  };
+
+  // Hook setView
+  const _origSetView23 = window.setView;
+  if (typeof _origSetView23 === 'function'){
+    window.setView = function(v){
+      _origSetView23.call(this, v);
+      if (v === 'fases')    try { cbRenderFasesPage(); }    catch(e){ console.error(e); }
+      if (v === 'cadencia') try { cbRenderCadenciaPage(); } catch(e){ console.error(e); }
+    };
+  }
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 2.4 — RACI editável                                           ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase2_4(){
+  const css = `
+.raci-table-cell{cursor:pointer;transition:filter .12s;}
+.raci-table-cell:hover{filter:brightness(.92);box-shadow:inset 0 0 0 2px var(--cb-coral);}
+.cb-raci-edit-name{cursor:text;outline:none;display:inline-block;}
+.cb-raci-edit-name:hover{background:rgba(0,0,0,.04);border-radius:3px;}
+.cb-raci-edit-name:focus{background:#fff;box-shadow:0 0 0 2px var(--cb-coral);border-radius:3px;padding:0 3px;}
+.cb-raci-rm-row{background:transparent;border:0;color:#DC2626;font-size:12px;cursor:pointer;padding:0 4px;opacity:0;transition:opacity .12s;flex-shrink:0;}
+.raci-data-row:hover .cb-raci-rm-row{opacity:.8;}
+.cb-raci-rm-row:hover{opacity:1 !important;}
+.cb-raci-add-act{background:transparent;border:0;color:var(--cb-coral);font-size:14px;cursor:pointer;padding:0 5px;font-weight:700;border-radius:3px;}
+.cb-raci-add-act:hover{background:var(--cb-coral-l);}
+.cb-raci-rm-section{background:transparent;border:0;color:#94A3B8;font-size:12px;cursor:pointer;padding:0 4px;border-radius:3px;}
+.cb-raci-rm-section:hover{background:#FEE2E2;color:#DC2626;}
+.raci-help-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#F0EDF8;border-bottom:1px solid #D8D2E8;font-size:11.5px;color:var(--cb-ink2);font-family:'Epilogue',sans-serif;}
+.raci-help-bar code{background:#fff;padding:1px 5px;border-radius:3px;border:1px solid var(--cb-rule);font-family:'JetBrains Mono','Courier New',monospace;font-size:10px;color:var(--cb-coral-d);}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id: 'cb-phase24-css', textContent: css }));
+
+  const RACI_CYCLE = ['', 'R', 'A', 'C', 'I', 'X', 'R/A', 'A/C', 'C/I'];
+  function nextRaciValue(current){
+    const cur = (current||'').trim().toUpperCase();
+    const idx = RACI_CYCLE.indexOf(cur);
+    if (idx < 0) return RACI_CYCLE[1];
+    return RACI_CYCLE[(idx + 1) % RACI_CYCLE.length];
+  }
+
+  // Adiciona barra de ajuda na página RACI uma vez
+  function addRaciHelpBar(){
+    const wrap = document.querySelector('.raci-wrap');
+    if (!wrap || document.getElementById('cb-raci-help')) return;
+    const help = document.createElement('div');
+    help.id = 'cb-raci-help';
+    help.className = 'raci-help-bar';
+    help.innerHTML = `
+      <div>💡 <strong>Clique numa célula</strong> pra alternar entre R / A / C / I / X / R/A / A/C / C/I / vazio. Clique na <strong>atividade</strong> pra renomear. <code>+</code> ao lado da seção adiciona linha. <code>✕</code> remove.</div>
+    `;
+    const filters = wrap.querySelector('.raci-filters');
+    if (filters && filters.nextSibling) wrap.insertBefore(help, filters.nextSibling);
+    else wrap.appendChild(help);
+  }
+
+  function escHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Substitui renderRaciTable por versão interativa
+  window.renderRaciTable = function(data){
+    const wrap = document.getElementById('raciTable');
+    if (!wrap || typeof RACI_COLS === 'undefined') return;
+    const NC = RACI_COLS.length;
+    const CW = 72, LW = 265, ROW = 32, HDR = 42;
+    const totalW = LW + NC*CW + 2;
+    let html = `<div style="position:relative;min-width:${totalW}px;">`;
+    // Header sticky 1
+    html += `<div style="position:sticky;top:0;z-index:20;display:flex;background:var(--cb-navy);border-bottom:2px solid var(--cb-coral);min-width:${totalW}px;">`;
+    html += `<div style="width:${LW}px;min-width:${LW}px;padding:0 14px;display:flex;align-items:flex-end;padding-bottom:6px;font-family:'Cabinet Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);position:sticky;left:0;background:var(--cb-navy);z-index:2;border-right:2px solid rgba(255,255,255,.1);">Atividade</div>`;
+    RACI_COL_GROUPS.forEach(grp => grp.cols.forEach(ci => {
+      const name = RACI_COLS[ci];
+      html += `<div style="width:${CW}px;min-width:${CW}px;height:${HDR}px;display:flex;align-items:center;justify-content:center;background:${grp.light};border-right:1px solid ${grp.color}30;overflow:hidden;" title="${escHtml(name)}"><span style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:700;color:${grp.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:${CW-6}px;">${escHtml(name)}</span></div>`;
+    }));
+    html += `</div>`;
+    // Header sticky 2
+    html += `<div style="position:sticky;top:${HDR}px;z-index:19;display:flex;background:#F0EDF8;border-bottom:1px solid #D8D2E8;min-width:${totalW}px;">`;
+    html += `<div style="width:${LW}px;min-width:${LW}px;position:sticky;left:0;background:#F0EDF8;z-index:2;border-right:2px solid #C0B8D0;"></div>`;
+    RACI_COL_GROUPS.forEach(grp => {
+      const w = grp.cols.length * CW;
+      html += `<div style="width:${w}px;min-width:${w}px;text-align:center;font-family:'Cabinet Grotesk',sans-serif;font-size:9.5px;font-weight:800;color:${grp.color};background:${grp.light};padding:3px 0;border-right:1px solid #D8D2E8;letter-spacing:.5px;">${escHtml(grp.lbl)}</div>`;
+    });
+    html += `</div>`;
+    // Data rows
+    data.forEach(row => {
+      const origIdx = RACI_DATA.indexOf(row);
+      if (row.g){
+        html += `<div data-rowtype="g" data-orig-idx="${origIdx}" style="display:flex;background:var(--cb-navy);min-width:${totalW}px;position:sticky;top:${HDR+22}px;z-index:18;"><div style="width:100%;padding:8px 14px;font-family:'Cabinet Grotesk',sans-serif;font-size:12px;font-weight:900;color:var(--cb-coral);letter-spacing:1px;text-transform:uppercase;"><span class="cb-raci-edit-name" data-edit-group="${origIdx}" tabindex="0">${escHtml(row.g)}</span></div></div>`;
+      } else if (row.section){
+        html += `<div data-rowtype="section" data-orig-idx="${origIdx}" style="display:flex;background:#EEEAF4;border-bottom:1px solid #D8D2E8;min-width:${totalW}px;">`;
+        html += `<div style="width:${LW}px;min-width:${LW}px;padding:6px 14px;font-family:'Cabinet Grotesk',sans-serif;font-size:11px;font-weight:800;color:#4A4650;position:sticky;left:0;background:#EEEAF4;z-index:1;border-right:2px solid #C0B8D0;display:flex;justify-content:space-between;align-items:center;gap:6px;">`;
+        html += `<span class="cb-raci-edit-name" data-edit-section="${origIdx}" tabindex="0" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(row.section)}</span>`;
+        html += `<span style="display:inline-flex;gap:2px;flex-shrink:0;"><button class="cb-raci-add-act" data-after-section="${origIdx}" title="Adicionar atividade nesta seção">+</button><button class="cb-raci-rm-section" data-orig-idx="${origIdx}" title="Remover seção (e atividades dela)">✕</button></span>`;
+        html += `</div>`;
+        html += RACI_COLS.map(() => `<div style="width:${CW}px;min-width:${CW}px;border-right:1px solid #E2DDE8;background:#EEEAF4;"></div>`).join('');
+        html += `</div>`;
+      } else {
+        // activity row
+        html += `<div class="raci-data-row" data-rowtype="activity" data-orig-idx="${origIdx}" style="display:flex;min-width:${totalW}px;border-bottom:1px solid #F0EDF8;" onmouseenter="this.style.background='#FBF8F5'" onmouseleave="this.style.background=''">`;
+        html += `<div style="width:${LW}px;min-width:${LW}px;padding:0 8px 0 20px;display:flex;align-items:center;font-size:11.5px;color:#374151;height:${ROW}px;position:sticky;left:0;background:inherit;z-index:1;border-right:2px solid #E2DDE8;gap:4px;justify-content:space-between;">`;
+        html += `<span class="cb-raci-edit-name" data-edit-act="${origIdx}" tabindex="0" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(row.a)}</span>`;
+        html += `<button class="cb-raci-rm-row" data-orig-idx="${origIdx}" title="Remover atividade">✕</button>`;
+        html += `</div>`;
+        RACI_COLS.forEach((_, ci) => {
+          const v = (row.v[ci]||'').trim();
+          const grp = RACI_COL_GROUPS.find(g => g.cols.includes(ci));
+          const border = grp && ci === grp.cols[grp.cols.length-1] ? `border-right:2px solid ${grp.color}40;` : 'border-right:1px solid #F0EDF8;';
+          html += `<div class="raci-table-cell" data-row="${origIdx}" data-col="${ci}" style="width:${CW}px;min-width:${CW}px;height:${ROW}px;display:flex;align-items:center;justify-content:center;${border}${cellStyle(v)}"><span style="font-size:11px;">${escHtml(v)}</span></div>`;
+        });
+        html += `</div>`;
+      }
+    });
+    html += `</div>`;
+    wrap.innerHTML = html;
+    addRaciHelpBar();
+    attachRaciHandlers();
+  };
+
+  function attachRaciHandlers(){
+    // Cell cycle on click
+    document.querySelectorAll('#raciTable .raci-table-cell').forEach(cell => {
+      cell.onclick = () => {
+        const rowIdx = parseInt(cell.dataset.row, 10);
+        const colIdx = parseInt(cell.dataset.col, 10);
+        const row = RACI_DATA[rowIdx];
+        if (!row) return;
+        if (!Array.isArray(row.v)) row.v = new Array(RACI_COLS.length).fill('');
+        const next = nextRaciValue(row.v[colIdx]);
+        row.v[colIdx] = next;
+        // Re-style cell in place
+        const grp = RACI_COL_GROUPS.find(g => g.cols.includes(colIdx));
+        const border = grp && colIdx === grp.cols[grp.cols.length-1] ? `border-right:2px solid ${grp.color}40;` : 'border-right:1px solid #F0EDF8;';
+        cell.setAttribute('style', `width:72px;min-width:72px;height:32px;display:flex;align-items:center;justify-content:center;${border}${cellStyle(next)}`);
+        cell.innerHTML = `<span style="font-size:11px;">${escHtml(next)}</span>`;
+        if (typeof renderTasks === 'function') renderTasks();
+      };
+    });
+
+    // Remove activity row
+    document.querySelectorAll('#raciTable .cb-raci-rm-row').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.origIdx, 10);
+        const row = RACI_DATA[idx];
+        if (!row || !row.a) return;
+        if (!confirm(`Remover atividade "${row.a}" da matriz RACI?`)) return;
+        RACI_DATA.splice(idx, 1);
+        rebuildRaci();
+      };
+    });
+
+    // Remove section
+    document.querySelectorAll('#raciTable .cb-raci-rm-section').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.origIdx, 10);
+        const row = RACI_DATA[idx];
+        if (!row || !row.section) return;
+        // count activities under this section
+        let count = 0;
+        for (let i = idx + 1; i < RACI_DATA.length; i++){
+          if (RACI_DATA[i].section || RACI_DATA[i].g) break;
+          count++;
+        }
+        const msg = `Remover seção "${row.section}"${count>0 ? ` e suas ${count} atividade(s)` : ''}?`;
+        if (!confirm(msg)) return;
+        // remove section + its activities
+        RACI_DATA.splice(idx, 1 + count);
+        rebuildRaci();
+      };
+    });
+
+    // Add activity in section
+    document.querySelectorAll('#raciTable .cb-raci-add-act').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const sectIdx = parseInt(btn.dataset.afterSection, 10);
+        const name = prompt('Nome da nova atividade nesta seção:');
+        if (!name || !name.trim()) return;
+        let insertAt = sectIdx + 1;
+        while (insertAt < RACI_DATA.length && !RACI_DATA[insertAt].section && !RACI_DATA[insertAt].g){
+          insertAt++;
+        }
+        RACI_DATA.splice(insertAt, 0, { a: name.trim(), v: new Array(RACI_COLS.length).fill('') });
+        rebuildRaci();
+      };
+    });
+
+    // Edit name (activity, section, group) in place
+    document.querySelectorAll('#raciTable .cb-raci-edit-name').forEach(span => {
+      span.contentEditable = 'true';
+      span.spellcheck = false;
+      span.onblur = () => {
+        const newText = (span.textContent || '').trim();
+        const editAct     = span.dataset.editAct;
+        const editSection = span.dataset.editSection;
+        const editGroup   = span.dataset.editGroup;
+        let changed = false;
+        if (editAct){
+          const idx = parseInt(editAct, 10);
+          if (RACI_DATA[idx] && RACI_DATA[idx].a !== newText){
+            RACI_DATA[idx].a = newText || '(sem nome)';
+            changed = true;
+          }
+        } else if (editSection){
+          const idx = parseInt(editSection, 10);
+          if (RACI_DATA[idx] && RACI_DATA[idx].section !== newText){
+            RACI_DATA[idx].section = newText;
+            changed = true;
+          }
+        } else if (editGroup){
+          const idx = parseInt(editGroup, 10);
+          if (RACI_DATA[idx] && RACI_DATA[idx].g !== newText){
+            RACI_DATA[idx].g = newText;
+            changed = true;
+          }
+        }
+        if (changed && typeof renderTasks === 'function') renderTasks();
+      };
+      span.onkeydown = (e) => {
+        if (e.key === 'Enter'){ e.preventDefault(); span.blur(); }
+        if (e.key === 'Escape'){ e.preventDefault(); span.blur(); }
+      };
+    });
+  }
+
+  function rebuildRaci(){
+    if (typeof raciBuilt !== 'undefined') raciBuilt = false;
+    if (typeof buildRaciTable === 'function') buildRaciTable();
+    if (typeof renderTasks === 'function') renderTasks();
+  }
+})();
 </script>
 </body>
 </html>
