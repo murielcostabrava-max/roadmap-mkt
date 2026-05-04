@@ -4797,6 +4797,337 @@ document.addEventListener('DOMContentLoaded',()=>{
   else boot4();
   setTimeout(boot4, 1500);
 })();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 5 — Roles + Página Acessos + Restrições de UI                ║
+   ║  Onda 1 (sem auth): default role = master pra não quebrar UX.      ║
+   ║  Onda 2 (com auth): role real lida de cb_users.                    ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase5(){
+  const css = `
+.cb-role-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:700;font-family:'Cabinet Grotesk',sans-serif;letter-spacing:.4px;text-transform:uppercase;}
+.cb-role-pill.master{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;}
+.cb-role-pill.adm{background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;}
+.cb-role-pill.normal{background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;}
+.cb-role-pill.viewer{background:#F0EDF8;color:#5A4570;border:1px solid #C0B8D0;}
+.cb-acc-page-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin:0 4px 18px 4px;flex-wrap:wrap;gap:12px;}
+.cb-acc-page-hdr h2{margin:0;font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:24px;color:var(--cb-navy);letter-spacing:-.5px;}
+.cb-acc-page-hdr .sub{font-size:12px;color:var(--cb-ink3);margin-top:4px;}
+.cb-acc-table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid var(--cb-rule);border-radius:10px;overflow:hidden;}
+.cb-acc-table th{text-align:left;padding:10px 12px;background:#F0EDF8;font-weight:700;color:var(--cb-ink2);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;}
+.cb-acc-table td{padding:10px 12px;border-bottom:1px solid var(--cb-rule);vertical-align:middle;}
+.cb-acc-table tr:last-child td{border-bottom:none;}
+.cb-acc-table tr:hover td{background:#FAFAFA;}
+.cb-acc-table .ava{width:34px;height:34px;border-radius:50%;background:var(--cb-coral-l);display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:var(--cb-coral-d);font-family:'Cabinet Grotesk',sans-serif;font-size:12px;overflow:hidden;border:2px solid #fff;box-shadow:0 0 0 1px var(--cb-rule);}
+.cb-acc-table .ava img{width:100%;height:100%;object-fit:cover;}
+.cb-acc-table select{border:1.5px solid var(--cb-rule);border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;background:#fff;cursor:pointer;outline:none;}
+.cb-acc-table select:focus{border-color:var(--cb-coral);}
+.cb-acc-table .rm{background:transparent;border:0;color:#DC2626;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;opacity:.7;}
+.cb-acc-table .rm:hover{opacity:1;background:#FEE2E2;}
+.cb-acc-add{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:#FAFAFA;padding:14px;border:1px dashed var(--cb-rule2);border-radius:10px;}
+.cb-acc-add label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;color:var(--cb-ink3);text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+.cb-acc-add input,.cb-acc-add select{border:1.5px solid var(--cb-rule);border-radius:7px;padding:8px 10px;font-size:12px;font-family:inherit;outline:none;background:#fff;}
+.cb-acc-add input:focus,.cb-acc-add select:focus{border-color:var(--cb-coral);}
+.cb-acc-add button{background:var(--cb-coral);color:#fff;border:0;padding:9px 16px;border-radius:7px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;}
+.cb-acc-add button:hover{background:var(--cb-coral-d);}
+.cb-acc-add input.err{border-color:#DC2626;}
+.cb-acc-toggle{display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;color:var(--cb-ink2);user-select:none;}
+.cb-acc-toggle input{accent-color:var(--cb-coral);}
+.cb-mode-banner{background:linear-gradient(90deg,#FEF3C7,#FFFBEB);border:1px solid #FCD34D;color:#92400E;padding:8px 14px;font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.cb-mode-banner code{background:#FBBF24;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;}
+.cb-disabled-overlay{cursor:not-allowed !important;opacity:.55;pointer-events:none !important;}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id:'cb-phase5-css', textContent: css }));
+
+  // ── Role helpers ─────────────────────────────────────────────────────
+  // Pré-auth: master por default. Pós-auth (Onda 2): role real de cb_users.
+  window._cbRole = window._cbRole || 'master';
+  window._cbAuthEnabled = false; // Onda 2 vai ligar
+  window._cbCurrentEmail = null;
+
+  window.cbCurrentRole = function(){ return window._cbRole || 'viewer'; };
+  window.cbCurrentEmail = function(){ return window._cbCurrentEmail || null; };
+
+  const PERMS = {
+    'view':              ['master','adm','normal','viewer'],
+    'edit_status_notes': ['master','adm','normal'],   // status, observações, owners (chips)
+    'edit_dates':        ['master','adm'],            // datas, label, type, freq, drag/resize, +Nova
+    'delete':            ['master'],                  // remover etapas / atividades
+    'admin_raci':        ['master'],                  // editar RACI (células, +/×, renomear)
+    'admin_team':        ['master'],                  // editar Equipe
+    'admin_users':       ['master']                   // gerenciar acessos
+  };
+  window.cbCan = function(action){
+    const role = cbCurrentRole();
+    return (PERMS[action]||[]).includes(role);
+  };
+
+  function cbDeny(action){
+    const role = cbCurrentRole();
+    alert(`Sem permissão.\n\nAção: ${action}\nSeu papel: ${role.toUpperCase()}\n\nFale com a Master pra ajustar.`);
+  }
+
+  // ── Banner topbar mostrando modo + role ─────────────────────────────
+  function ensureModeBanner(){
+    if (document.getElementById('cb-mode-banner')) return;
+    if (!window._cbAuthEnabled){
+      const banner = document.createElement('div');
+      banner.id = 'cb-mode-banner';
+      banner.className = 'cb-mode-banner';
+      banner.innerHTML = `<span>🔓</span><span>Modo aberto — login com Microsoft <code>aguarda TI</code>. Restrições de papéis estarão ativas após login.</span>`;
+      const app = document.getElementById('app');
+      const topbar = document.querySelector('.topbar');
+      if (app && topbar && topbar.nextSibling){
+        app.insertBefore(banner, topbar.nextSibling);
+      }
+    }
+  }
+
+  // ── Página Acessos (vEAcessos) ─────────────────────────────────────
+  function ensureAcessosInfra(){
+    // Tab visível apenas pra master
+    const navWrap = document.querySelector('.nav-tabs-wrap');
+    if (navWrap && !document.querySelector('button[data-cb-acc]')){
+      const btn = document.createElement('button');
+      btn.className = 'nav-tab';
+      btn.dataset.cbAcc = '1';
+      btn.setAttribute('onclick', "setView('acessos')");
+      btn.innerHTML = '🔐 Acessos';
+      navWrap.appendChild(btn);
+    }
+    // View page
+    if (!document.getElementById('vAcessos')){
+      const v = document.createElement('div');
+      v.className = 'view-page';
+      v.id = 'vAcessos';
+      v.innerHTML = '<div class="page-scroll" id="vAcessosBody"></div>';
+      const rel = document.getElementById('vRelatorio');
+      if (rel && rel.parentElement) rel.parentElement.insertBefore(v, rel.nextSibling);
+      else document.querySelector('#app')?.appendChild(v);
+    }
+    if (typeof VIEWS !== 'undefined' && !VIEWS.acessos){
+      VIEWS.acessos = 'vAcessos';
+    }
+    // Esconde a tab se não for master
+    const tab = document.querySelector('button[data-cb-acc]');
+    if (tab) tab.style.display = cbCan('admin_users') ? '' : 'none';
+  }
+
+  function escHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function initials(name){
+    if (!name) return '?';
+    const p = name.trim().split(/\s+/);
+    if (p.length === 1) return p[0].slice(0,2).toUpperCase();
+    return (p[0][0] + p[p.length-1][0]).toUpperCase();
+  }
+  function fmtDateTime(iso){
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      return `${dd}/${mm}/${String(d.getFullYear()).slice(2)}`;
+    } catch(e){ return '—'; }
+  }
+
+  window.cbRenderAcessosPage = async function(){
+    const root = document.getElementById('vAcessos');
+    if (!root) return;
+    const body = root.querySelector('.page-scroll') || root;
+    if (!cbCan('admin_users')){
+      body.innerHTML = '<div style="padding:50px;text-align:center;color:#9CA3AF;font-size:13px;">Acesso negado. Apenas Master pode gerenciar usuários.</div>';
+      return;
+    }
+    body.innerHTML = '<div style="padding:30px;color:#9CA3AF;text-align:center;font-size:12px;">Carregando…</div>';
+    try {
+      const cfg = window.CB_SUPABASE;
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      const { data: users, error } = await sb.from('cb_users').select('*').order('created_at', { ascending: true });
+      if (error) throw error;
+      body.innerHTML = `
+        <div class="cb-acc-page-hdr">
+          <div>
+            <h2>🔐 Acessos & Permissões</h2>
+            <div class="sub">${users.length} usuário${users.length===1?'':'s'} cadastrado${users.length===1?'':'s'} · domínio @costabrava.com.br · login Microsoft (aguardando TI)</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--cb-rule);border-radius:10px;padding:14px;margin-bottom:14px;">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11.5px;">
+            <div><strong style="color:#92400E;">👑 Master</strong><div style="color:var(--cb-ink3);margin-top:2px;">Tudo. Único papel que deleta linhas, edita RACI/Equipe/Cadência e gerencia acessos.</div></div>
+            <div><strong style="color:#1E40AF;">⭐ ADM</strong><div style="color:var(--cb-ink3);margin-top:2px;">Edita prazos, adiciona atividades. Sem deletar nem RACI.</div></div>
+            <div><strong style="color:#065F46;">👤 Normal</strong><div style="color:var(--cb-ink3);margin-top:2px;">Marca status, escreve observações, atribui responsáveis. Sem mexer em datas.</div></div>
+            <div><strong style="color:#5A4570;">👁 Visualizador</strong><div style="color:var(--cb-ink3);margin-top:2px;">Só leitura.</div></div>
+          </div>
+        </div>
+        <table class="cb-acc-table">
+          <thead><tr>
+            <th></th>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Papel</th>
+            <th>Ativo</th>
+            <th>Último acesso</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="cb-acc-tbody"></tbody>
+        </table>
+        <div class="cb-acc-add">
+          <label>E-mail<input type="email" id="cb-acc-new-email" placeholder="fulano@costabrava.com.br"></label>
+          <label>Nome<input type="text" id="cb-acc-new-name" placeholder="Nome Completo"></label>
+          <label>Papel
+            <select id="cb-acc-new-role">
+              <option value="viewer">Visualizador</option>
+              <option value="normal">Normal</option>
+              <option value="adm">ADM</option>
+              <option value="master">Master</option>
+            </select>
+          </label>
+          <button onclick="cbAddAcessoUser()">+ Adicionar usuário</button>
+        </div>
+      `;
+      const tbody = body.querySelector('#cb-acc-tbody');
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = u.id;
+        tr.innerHTML = `
+          <td><div class="ava">${u.photo_url ? `<img src="${escHtml(u.photo_url)}">` : escHtml(initials(u.name))}</div></td>
+          <td><span style="font-weight:600;color:var(--cb-navy);">${escHtml(u.name||'—')}</span></td>
+          <td><span style="color:var(--cb-ink2);font-size:11.5px;">${escHtml(u.email)}</span></td>
+          <td>
+            <select data-act="role">
+              <option value="viewer"${u.role==='viewer'?' selected':''}>👁 Visualizador</option>
+              <option value="normal"${u.role==='normal'?' selected':''}>👤 Normal</option>
+              <option value="adm"${u.role==='adm'?' selected':''}>⭐ ADM</option>
+              <option value="master"${u.role==='master'?' selected':''}>👑 Master</option>
+            </select>
+          </td>
+          <td><label class="cb-acc-toggle"><input type="checkbox" data-act="active" ${u.active?'checked':''}> ${u.active?'sim':'não'}</label></td>
+          <td style="font-size:11px;color:var(--cb-ink3);">${fmtDateTime(u.last_seen_at)}</td>
+          <td><button class="rm" data-act="remove" title="Remover">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      // Wire up handlers
+      tbody.querySelectorAll('select[data-act="role"]').forEach(s => {
+        s.onchange = async () => {
+          const id = s.closest('tr').dataset.id;
+          await sb.from('cb_users').update({ role: s.value }).eq('id', id);
+        };
+      });
+      tbody.querySelectorAll('input[data-act="active"]').forEach(c => {
+        c.onchange = async () => {
+          const id = c.closest('tr').dataset.id;
+          await sb.from('cb_users').update({ active: c.checked }).eq('id', id);
+          c.parentElement.lastChild.textContent = ' ' + (c.checked ? 'sim' : 'não');
+        };
+      });
+      tbody.querySelectorAll('button[data-act="remove"]').forEach(b => {
+        b.onclick = async () => {
+          const tr = b.closest('tr');
+          const id = tr.dataset.id;
+          if (!confirm('Remover este usuário do sistema? (não desloga ele se já estiver autenticado — pra isso desative em vez de remover)')) return;
+          await sb.from('cb_users').delete().eq('id', id);
+          tr.remove();
+        };
+      });
+    } catch(err){
+      body.innerHTML = `<div style="color:#DC2626;padding:40px;text-align:center;font-size:12px;">Erro ao carregar: ${escHtml(err.message)}</div>`;
+    }
+  };
+
+  window.cbAddAcessoUser = async function(){
+    const emailEl = document.getElementById('cb-acc-new-email');
+    const nameEl = document.getElementById('cb-acc-new-name');
+    const roleEl = document.getElementById('cb-acc-new-role');
+    const email = (emailEl.value||'').trim().toLowerCase();
+    const name = (nameEl.value||'').trim();
+    const role = roleEl.value;
+    emailEl.classList.remove('err');
+    if (!email || !email.endsWith('@costabrava.com.br')){
+      emailEl.classList.add('err');
+      alert('E-mail precisa ser do domínio @costabrava.com.br');
+      return;
+    }
+    if (!name){ alert('Informa o nome'); return; }
+    try {
+      const cfg = window.CB_SUPABASE;
+      const sb = window.supabase.createClient(cfg.URL, cfg.ANON_KEY);
+      const { error } = await sb.from('cb_users').insert({ email, name, role, active: true });
+      if (error) throw error;
+      emailEl.value = ''; nameEl.value = ''; roleEl.value = 'viewer';
+      cbRenderAcessosPage();
+    } catch(err){
+      alert('Erro: ' + err.message);
+    }
+  };
+
+  // ── Wraps de restrição de role ──────────────────────────────────────
+  function wrapRestricted(fnName, action, fallbackMsg){
+    const orig = window[fnName];
+    if (typeof orig !== 'function') return;
+    window[fnName] = function(){
+      if (!cbCan(action)){
+        cbDeny(fallbackMsg || fnName);
+        return;
+      }
+      return orig.apply(this, arguments);
+    };
+  }
+
+  function applyRestrictions(){
+    // Delete (apenas master)
+    wrapRestricted('deleteSeg', 'delete', 'Deletar etapa');
+    wrapRestricted('cbRemoveTeamMember', 'admin_team', 'Remover integrante');
+    wrapRestricted('cbRemoveAttachment', 'admin', 'Remover anexo');
+    // RACI (apenas master) — wrap do cbDuplicateSeg etc seria errado, RACI é via cells handlers
+    // Equipe (apenas master)
+    wrapRestricted('cbAddTeamMember', 'admin_team', 'Adicionar integrante');
+    wrapRestricted('cbUpdateMemberField', 'admin_team', 'Alterar dados de integrante');
+    wrapRestricted('cbUploadMemberPhoto', 'admin_team', 'Trocar foto');
+    // Datas / atividades (master + adm)
+    wrapRestricted('confirmAddRow', 'edit_dates', 'Adicionar atividade');
+    // Brand
+    wrapRestricted('cbChangeLogo', 'admin', 'Trocar logo');
+    // Logo banner: mostrar role atual no topbar
+    showRoleBadge();
+  }
+
+  function showRoleBadge(){
+    if (document.getElementById('cb-role-badge')) return;
+    const right = document.querySelector('.topbar-right');
+    if (!right) return;
+    const role = cbCurrentRole();
+    const labels = { master:'👑 Master', adm:'⭐ ADM', normal:'👤 Normal', viewer:'👁 Visualizador' };
+    const pill = document.createElement('span');
+    pill.id = 'cb-role-badge';
+    pill.className = 'cb-role-pill ' + role;
+    pill.textContent = labels[role] || role;
+    pill.title = 'Seu papel atual no sistema';
+    right.insertBefore(pill, right.firstChild);
+  }
+
+  // ── Hook setView ────────────────────────────────────────────────────
+  const _origSetView_5 = window.setView;
+  if (typeof _origSetView_5 === 'function'){
+    window.setView = function(v){
+      ensureAcessosInfra();
+      _origSetView_5.call(this, v);
+      if (v === 'acessos') try { cbRenderAcessosPage(); } catch(e){ console.error(e); }
+    };
+  }
+
+  // ── Boot ────────────────────────────────────────────────────────────
+  function boot5(){
+    ensureAcessosInfra();
+    ensureModeBanner();
+    applyRestrictions();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot5);
+  else boot5();
+  setTimeout(boot5, 1500);
+})();
 </script>
 </body>
 </html>
