@@ -287,6 +287,8 @@ body{font-family:'Epilogue',sans-serif;background:var(--cb-sand);color:var(--cb-
 </style>
 <!-- Supabase JS — CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<!-- Chart.js — CDN (para a página de Relatório) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- ⚠️ EDITAR AQUI: cole sua URL e anon key do Supabase ────────────── -->
 <script>
   window.CB_SUPABASE = {
@@ -3893,6 +3895,661 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (typeof buildRaciTable === 'function') buildRaciTable();
     if (typeof renderTasks === 'function') renderTasks();
   }
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 3.1 — Status de entrega                                       ║
+   ║   Etapa: seg.status, seg.completed_at                              ║
+   ║   Atividade: task.status                                           ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase3_1(){
+  const STATUS_OPTS = [
+    { k: '',                      lbl: 'Pendente / em andamento', emoji: '⚪', color: 'transparent' },
+    { k: 'concluida_prazo',       lbl: 'Concluída no prazo',      emoji: '✅', color: '#10B981' },
+    { k: 'concluida_atraso_leve', lbl: 'Concluída com atraso leve', emoji: '🟡', color: '#FBBF24' },
+    { k: 'concluida_atraso',      lbl: 'Concluída com atraso',    emoji: '🟠', color: '#F97316' },
+    { k: 'nao_concluida',         lbl: 'Não concluída',           emoji: '🔴', color: '#DC2626' },
+    { k: 'cancelada',             lbl: 'Demanda cancelada',       emoji: '⛔', color: '#6B7280' }
+  ];
+  window.CB_STATUS = STATUS_OPTS;
+  window.cbStatusInfo = function(k){
+    return STATUS_OPTS.find(s => s.k === (k||'')) || STATUS_OPTS[0];
+  };
+
+  const css = `
+.ep-field select.cb-status-select{border:1.5px solid var(--cb-rule);border-radius:7px;padding:8px 10px;font-size:12px;outline:none;background:#fff;font-family:inherit;width:100%;cursor:pointer;}
+.ep-field select.cb-status-select:focus{border-color:var(--cb-coral);}
+.cb-status-strip{position:absolute;left:0;right:0;bottom:0;height:4px;border-radius:0 0 6px 6px;pointer-events:none;}
+.cb-status-cancel{opacity:.45 !important;text-decoration:line-through;text-decoration-thickness:1.5px;}
+.cb-status-pip{position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.2);pointer-events:none;font-size:8px;display:flex;align-items:center;justify-content:center;color:#fff;}
+.cb-tp-status{margin-bottom:8px;display:flex;flex-direction:column;gap:6px;}
+.cb-tp-status select{border:1.5px solid var(--cb-rule);border-radius:7px;padding:9px 12px;font-size:13px;outline:none;background:#fff;font-family:inherit;cursor:pointer;width:100%;}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id:'cb-phase31-css', textContent: css }));
+
+  function buildStatusOptionsHTML(currentVal){
+    return STATUS_OPTS.map(s =>
+      `<option value="${s.k}"${s.k===(currentVal||'')?' selected':''}>${s.emoji} ${s.lbl}</option>`
+    ).join('');
+  }
+
+  // ── Patch openEdit (segmento): adiciona dropdown de status ─────────
+  const _origOpenEdit_31 = window.openEdit;
+  if (typeof _origOpenEdit_31 === 'function'){
+    window.openEdit = function(task, si){
+      _origOpenEdit_31.call(this, task, si);
+      setTimeout(() => {
+        const seg = task.segs[si >= 0 ? si : 0];
+        if (!seg) return;
+        if (document.getElementById('inStatus')) return;
+        const epBody = document.getElementById('epBody');
+        if (!epBody) return;
+        const statusField = document.createElement('div');
+        statusField.className = 'ep-field';
+        statusField.innerHTML = `
+          <label>📊 Status de entrega da etapa</label>
+          <select id="inStatus" class="cb-status-select">${buildStatusOptionsHTML(seg.status)}</select>
+        `;
+        // inserir antes da lista de etapas
+        const segsBlock = epBody.querySelector('.ep-segs');
+        const notesField = document.querySelector('#epBody .ep-field:has(#inNotes)') || epBody.querySelector('#inNotes')?.closest('.ep-field');
+        if (notesField && notesField.parentElement === epBody) {
+          epBody.insertBefore(statusField, notesField.nextSibling);
+        } else if (segsBlock) {
+          epBody.insertBefore(statusField, segsBlock);
+        } else {
+          epBody.appendChild(statusField);
+        }
+      }, 60);
+    };
+  }
+
+  // ── Patch saveEdit: salva seg.status + completed_at ─────────────────
+  const _origSaveEdit_31 = window.saveEdit;
+  if (typeof _origSaveEdit_31 === 'function'){
+    window.saveEdit = function(){
+      const statusEl = document.getElementById('inStatus');
+      const status = statusEl ? statusEl.value : null;
+      const targetTask = (typeof ET !== 'undefined') ? ET : null;
+      const targetSi   = (typeof ESI !== 'undefined') ? ESI : null;
+      _origSaveEdit_31.apply(this, arguments);
+      if (status !== null && targetTask && targetTask.segs && typeof targetSi === 'number'){
+        const seg = targetTask.segs[targetSi];
+        if (seg){
+          seg.status = status || undefined;
+          if (status && status.startsWith('concluida') && !seg.completed_at){
+            seg.completed_at = new Date().toISOString();
+          } else if (!status || status === 'cancelada' || status === 'nao_concluida'){
+            // mantém completed_at se já tinha; pra concluída, sempre seta
+          }
+          if (typeof renderTasks === 'function') renderTasks();
+        }
+      }
+    };
+  }
+
+  // ── Patch task panel: adiciona dropdown de status no painel de atividade ─
+  function patchTaskPanel(){
+    const tpBody = document.querySelector('.task-panel-body');
+    if (!tpBody || tpBody.querySelector('.cb-tp-status')) return;
+    const statusBlock = document.createElement('div');
+    statusBlock.className = 'cb-tp-status';
+    statusBlock.innerHTML = `
+      <label>📊 Status geral da atividade</label>
+      <select id="tpStatus">${buildStatusOptionsHTML('')}</select>
+    `;
+    // Inserir após o nome
+    const nameField = tpBody.querySelector('#tpName')?.closest('div');
+    if (nameField && nameField.parentElement === tpBody) {
+      tpBody.insertBefore(statusBlock, nameField.nextSibling);
+    } else {
+      tpBody.insertBefore(statusBlock, tpBody.firstChild);
+    }
+  }
+
+  // Wrap openTaskPanel via cbCloseTaskPanel? Easier: hook into the click on task name
+  // We don't have direct access to openTaskPanel since it's a closure. Wrap the click handler instead.
+  // Actually, the easier path: observe DOM mutations. Or hook cbSaveTaskPanel's wrapper.
+
+  // Rather than wrapping openTaskPanel, we install a MutationObserver that catches the panel opening
+  const observer = new MutationObserver(() => {
+    const panel = document.getElementById('taskPanel');
+    if (!panel) return;
+    if (!panel.classList.contains('open')) return;
+    patchTaskPanel();
+    // Populate the status select from current task — we get via global _currentTaskForPanel
+    // But that variable is a closure. We can read from the task name in tpName and find the matching task.
+    const name = document.getElementById('tpName')?.value;
+    if (!name) return;
+    const t = TASKS.find(x => x.n === name);
+    const sel = document.getElementById('tpStatus');
+    if (t && sel) sel.value = t.status || '';
+  });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
+  // Patch cbSaveTaskPanel pra salvar status
+  const _origSaveTaskPanel_31 = window.cbSaveTaskPanel;
+  if (typeof _origSaveTaskPanel_31 === 'function'){
+    window.cbSaveTaskPanel = function(){
+      const sel = document.getElementById('tpStatus');
+      const status = sel ? sel.value : null;
+      const name = document.getElementById('tpName')?.value;
+      const t = name ? TASKS.find(x => x.n === name) : null;
+      _origSaveTaskPanel_31.apply(this, arguments);
+      if (t && status !== null){
+        t.status = status || undefined;
+        if (status && status.startsWith('concluida') && !t.completed_at){
+          t.completed_at = new Date().toISOString();
+        }
+        if (typeof renderTasks === 'function') renderTasks();
+      }
+    };
+  }
+
+  // ── Decorador pós-render: aplica indicadores visuais nas barras ─────
+  function decorateBarsWithStatus(){
+    const cv = document.getElementById('canvas');
+    if (!cv || typeof visibleTasks !== 'function') return;
+    const visTasks = visibleTasks().filter(t => !t.G);
+    const rows = cv.querySelectorAll('.canvas-t-row');
+    rows.forEach((row, idx) => {
+      const task = visTasks[idx];
+      if (!task) return;
+      const bars = row.querySelectorAll('.seg');
+      bars.forEach(bar => {
+        // Limpa decoração anterior
+        bar.querySelectorAll('.cb-status-strip,.cb-status-pip').forEach(el => el.remove());
+        bar.classList.remove('cb-status-cancel');
+      });
+      // Para cada raw seg, encontra a barra correspondente por posição
+      (task.segs||[]).forEach(seg => {
+        if (!seg.status) return;
+        const info = window.cbStatusInfo(seg.status);
+        // Match bars by approx left position
+        let left;
+        try { left = (typeof xp === 'function') ? xp(seg.s) : null; } catch(e){ return; }
+        if (left == null) return;
+        bars.forEach(bar => {
+          const bl = parseFloat(bar.style.left || '0');
+          const isOcc = bar.classList.contains('seg-occ');
+          const expectedLeft = isOcc ? left + 2 : left;
+          if (Math.abs(bl - expectedLeft) > 4) return;
+          // Aplica strip de cor na borda inferior
+          if (info.k === 'cancelada'){
+            bar.classList.add('cb-status-cancel');
+          } else {
+            bar.classList.remove('cb-status-cancel');
+            const strip = document.createElement('div');
+            strip.className = 'cb-status-strip';
+            strip.style.background = info.color;
+            bar.appendChild(strip);
+          }
+          // Pip canto superior direito
+          const pip = document.createElement('div');
+          pip.className = 'cb-status-pip';
+          pip.style.background = info.color;
+          pip.title = info.lbl;
+          bar.appendChild(pip);
+        });
+      });
+    });
+  }
+
+  // Hook renderTasks
+  const _origRender_31 = window.renderTasks;
+  window.renderTasks = function(){
+    const r = _origRender_31.apply(this, arguments);
+    setTimeout(decorateBarsWithStatus, 80);
+    return r;
+  };
+})();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  FASE 3.2 — Página de Relatório                                     ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function cbPhase3_2(){
+  const css = `
+.cb-rep-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin:0 4px 18px 4px;flex-wrap:wrap;gap:12px;}
+.cb-rep-hdr h2{margin:0;font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:24px;color:var(--cb-navy);letter-spacing:-.5px;}
+.cb-rep-hdr .sub{font-size:12px;color:var(--cb-ink3);margin-top:4px;}
+.cb-rep-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.cb-rep-filters select{border:1.5px solid var(--cb-rule);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;background:#fff;outline:none;cursor:pointer;}
+.cb-rep-filters label{font-size:10px;font-weight:700;color:var(--cb-ink3);text-transform:uppercase;letter-spacing:.5px;margin-right:4px;}
+.cb-rep-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:22px;}
+.cb-rep-kpi{background:#fff;border:1.5px solid var(--cb-rule);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px;border-left:4px solid;}
+.cb-rep-kpi .v{font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:22px;color:var(--cb-navy);line-height:1;}
+.cb-rep-kpi .l{font-size:10px;color:var(--cb-ink3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;line-height:1.3;}
+.cb-rep-kpi .pct{font-size:11px;color:var(--cb-ink2);font-weight:600;}
+.cb-rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
+.cb-rep-card{background:#fff;border:1.5px solid var(--cb-rule);border-radius:12px;padding:18px;}
+.cb-rep-card h3{margin:0 0 14px;font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:14px;color:var(--cb-navy);}
+.cb-rep-chart{height:280px;position:relative;}
+.cb-rep-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+.cb-rep-table th{text-align:left;padding:8px 10px;background:#F0EDF8;font-weight:700;color:var(--cb-ink2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;}
+.cb-rep-table td{padding:8px 10px;border-bottom:1px solid var(--cb-rule);}
+.cb-rep-table tr:hover td{background:#FAFAFA;}
+.cb-status-bdg{display:inline-block;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;}
+@media(max-width:1100px){.cb-rep-kpis{grid-template-columns:repeat(3,1fr);}.cb-rep-grid{grid-template-columns:1fr;}}
+`;
+  document.head.appendChild(Object.assign(document.createElement('style'), { id:'cb-phase32-css', textContent: css }));
+
+  // Add nav tab + view-page
+  function ensureRelatorioInfra(){
+    // Tab
+    const navWrap = document.querySelector('.nav-tabs-wrap');
+    if (navWrap && !document.querySelector('button[data-cb-rel]')){
+      const btn = document.createElement('button');
+      btn.className = 'nav-tab';
+      btn.dataset.cbRel = '1';
+      btn.setAttribute('onclick', "setView('relatorio')");
+      btn.innerHTML = '📊 Relatório';
+      navWrap.appendChild(btn);
+    }
+    // View-page
+    if (!document.getElementById('vRelatorio')){
+      const vRel = document.createElement('div');
+      vRel.className = 'view-page';
+      vRel.id = 'vRelatorio';
+      vRel.innerHTML = '<div class="page-scroll" id="vRelatorioBody"></div>';
+      // Insert as sibling of vMaturidade
+      const mat = document.getElementById('vMaturidade');
+      if (mat && mat.parentElement) mat.parentElement.insertBefore(vRel, mat.nextSibling);
+      else document.querySelector('#app')?.appendChild(vRel);
+    }
+    // Add to VIEWS map
+    if (typeof VIEWS !== 'undefined' && !VIEWS.relatorio){
+      VIEWS.relatorio = 'vRelatorio';
+    }
+  }
+
+  // Filter state
+  window.cbRepFilter = { period: 'all', bu: 'all', person: '' };
+
+  function escHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function getSegItems(){
+    const items = [];
+    TASKS.forEach(t => {
+      if (t.G) return;
+      (t.segs||[]).forEach((s, i) => {
+        items.push({ task: t, seg: s, segIdx: i });
+      });
+    });
+    return items;
+  }
+
+  function applyFilters(items){
+    const f = window.cbRepFilter;
+    return items.filter(it => {
+      // BU
+      if (f.bu !== 'all'){
+        if (!Array.isArray(it.task.bu) || !it.task.bu.includes(f.bu)) return false;
+      }
+      // Pessoa
+      if (f.person){
+        if (!Array.isArray(it.seg.owners) || !it.seg.owners.includes(f.person)) return false;
+      }
+      // Período: filtra por completed_at se concluído, ou por seg.s/e
+      if (f.period !== 'all'){
+        const [year, month] = f.period.split('-').map(Number);
+        const monthStart = new Date(year, month-1, 1);
+        const monthEnd = new Date(year, month, 1);
+        // overlap: seg.s < monthEnd && seg.e >= monthStart
+        try {
+          const ss = new Date(it.seg.s + 'T00:00:00');
+          const se = new Date(it.seg.e + 'T00:00:00');
+          if (ss >= monthEnd || se < monthStart) return false;
+        } catch(e){}
+      }
+      return true;
+    });
+  }
+
+  function summarizeStatus(items){
+    const counts = {};
+    window.CB_STATUS.forEach(s => counts[s.k || 'pendente'] = 0);
+    items.forEach(it => {
+      const k = it.seg.status || 'pendente';
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return counts;
+  }
+
+  function pct(n, total){ return total ? Math.round(n/total*100) : 0; }
+
+  let charts = {};
+  function destroyCharts(){
+    Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+    charts = {};
+  }
+
+  function buildPeriodOptions(){
+    // Months from earliest seg.s to latest seg.e
+    let minDate = null, maxDate = null;
+    TASKS.forEach(t => (t.segs||[]).forEach(s => {
+      try {
+        const ss = new Date(s.s + 'T00:00:00');
+        const se = new Date(s.e + 'T00:00:00');
+        if (!minDate || ss < minDate) minDate = ss;
+        if (!maxDate || se > maxDate) maxDate = se;
+      } catch(e){}
+    }));
+    if (!minDate || !maxDate) return [];
+    const opts = [];
+    const c = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    while (c <= maxDate){
+      const y = c.getFullYear();
+      const m = c.getMonth() + 1;
+      const lbl = c.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      opts.push({ value: `${y}-${String(m).padStart(2,'0')}`, label: lbl });
+      c.setMonth(c.getMonth() + 1);
+    }
+    return opts;
+  }
+
+  window.cbRenderRelatorioPage = function(){
+    const root = document.getElementById('vRelatorio');
+    if (!root) return;
+    const body = root.querySelector('.page-scroll') || root;
+    if (typeof window.Chart === 'undefined'){
+      body.innerHTML = '<div style="padding:40px;text-align:center;color:#9CA3AF;">Carregando biblioteca de gráficos…</div>';
+      setTimeout(cbRenderRelatorioPage, 500);
+      return;
+    }
+    destroyCharts();
+
+    const allItems = getSegItems();
+    const items = applyFilters(allItems);
+    const counts = summarizeStatus(items);
+    const total = items.length;
+    const concluidasTotal = (counts.concluida_prazo||0) + (counts.concluida_atraso_leve||0) + (counts.concluida_atraso||0);
+
+    const periodOpts = buildPeriodOptions();
+    const buOpts = ['corp','live','you','endo','cs','tech','geral'];
+    const team = window.cbGetTeam ? cbGetTeam() : [];
+    const f = window.cbRepFilter;
+
+    body.innerHTML = `
+      <div class="cb-rep-hdr">
+        <div>
+          <h2>Relatório de Entregas</h2>
+          <div class="sub">${total} etapa${total===1?'':'s'} no recorte atual · atualiza conforme você marca status nas etapas</div>
+        </div>
+        <div class="cb-rep-filters">
+          <span><label>Período</label>
+            <select id="cb-rep-period">
+              <option value="all">Todos os meses</option>
+              ${periodOpts.map(o => `<option value="${o.value}"${f.period===o.value?' selected':''}>${o.label}</option>`).join('')}
+            </select>
+          </span>
+          <span><label>BU</label>
+            <select id="cb-rep-bu">
+              <option value="all">Todas</option>
+              ${buOpts.map(b => `<option value="${b}"${f.bu===b?' selected':''}>${b.toUpperCase()}</option>`).join('')}
+            </select>
+          </span>
+          <span><label>Responsável</label>
+            <select id="cb-rep-person">
+              <option value="">Todos</option>
+              ${team.map(m => `<option value="${m.id}"${f.person===m.id?' selected':''}>${escHtml(m.name)}</option>`).join('')}
+            </select>
+          </span>
+        </div>
+      </div>
+      <div class="cb-rep-kpis">
+        <div class="cb-rep-kpi" style="border-left-color:#9CA3AF;">
+          <div class="v">${total}</div>
+          <div class="l">Total no recorte</div>
+        </div>
+        <div class="cb-rep-kpi" style="border-left-color:#10B981;">
+          <div class="v">${counts.concluida_prazo||0}</div>
+          <div class="l">No prazo</div>
+          <div class="pct">${pct(counts.concluida_prazo||0,total)}%</div>
+        </div>
+        <div class="cb-rep-kpi" style="border-left-color:#FBBF24;">
+          <div class="v">${counts.concluida_atraso_leve||0}</div>
+          <div class="l">Atraso leve</div>
+          <div class="pct">${pct(counts.concluida_atraso_leve||0,total)}%</div>
+        </div>
+        <div class="cb-rep-kpi" style="border-left-color:#F97316;">
+          <div class="v">${counts.concluida_atraso||0}</div>
+          <div class="l">Atraso</div>
+          <div class="pct">${pct(counts.concluida_atraso||0,total)}%</div>
+        </div>
+        <div class="cb-rep-kpi" style="border-left-color:#DC2626;">
+          <div class="v">${counts.nao_concluida||0}</div>
+          <div class="l">Não concluída</div>
+          <div class="pct">${pct(counts.nao_concluida||0,total)}%</div>
+        </div>
+        <div class="cb-rep-kpi" style="border-left-color:#6B7280;">
+          <div class="v">${counts.cancelada||0}</div>
+          <div class="l">Canceladas</div>
+          <div class="pct">${pct(counts.cancelada||0,total)}%</div>
+        </div>
+      </div>
+      <div class="cb-rep-grid">
+        <div class="cb-rep-card">
+          <h3>Distribuição de status</h3>
+          <div class="cb-rep-chart"><canvas id="cb-chart-pie"></canvas></div>
+        </div>
+        <div class="cb-rep-card">
+          <h3>Por BU (status empilhado)</h3>
+          <div class="cb-rep-chart"><canvas id="cb-chart-bu"></canvas></div>
+        </div>
+        <div class="cb-rep-card">
+          <h3>Por responsável (etapas atribuídas)</h3>
+          <div class="cb-rep-chart"><canvas id="cb-chart-person"></canvas></div>
+        </div>
+        <div class="cb-rep-card">
+          <h3>Conclusões mês a mês</h3>
+          <div class="cb-rep-chart"><canvas id="cb-chart-monthly"></canvas></div>
+        </div>
+      </div>
+      <div class="cb-rep-card">
+        <h3>Detalhe — etapas no recorte (${items.length})</h3>
+        <div style="max-height:380px;overflow:auto;">
+          <table class="cb-rep-table">
+            <thead><tr>
+              <th>Atividade</th>
+              <th>Etapa</th>
+              <th>Datas</th>
+              <th>Responsáveis</th>
+              <th>Status</th>
+            </tr></thead>
+            <tbody>
+              ${items.length ? items.map(it => {
+                const info = window.cbStatusInfo(it.seg.status);
+                const owners = (it.seg.owners||[]).map(id => {
+                  const m = team.find(x => x.id === id);
+                  return m ? m.name : id;
+                }).join(', ');
+                return `<tr>
+                  <td>${escHtml(it.task.n)}</td>
+                  <td>${escHtml(it.seg.lbl||it.seg.t)}</td>
+                  <td style="white-space:nowrap;font-family:monospace;font-size:10.5px;">${it.seg.s} → ${it.seg.e}</td>
+                  <td>${escHtml(owners) || '<span style="color:#CBD5E1;">—</span>'}</td>
+                  <td><span class="cb-status-bdg" style="background:${info.color}20;color:${info.color};">${info.emoji} ${escHtml(info.lbl)}</span></td>
+                </tr>`;
+              }).join('') : '<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:30px;">Nenhum item neste recorte.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Wire filter handlers
+    document.getElementById('cb-rep-period').onchange = (e) => { window.cbRepFilter.period = e.target.value; cbRenderRelatorioPage(); };
+    document.getElementById('cb-rep-bu').onchange     = (e) => { window.cbRepFilter.bu     = e.target.value; cbRenderRelatorioPage(); };
+    document.getElementById('cb-rep-person').onchange = (e) => { window.cbRepFilter.person = e.target.value; cbRenderRelatorioPage(); };
+
+    // Charts
+    setTimeout(() => buildCharts(items, counts, team), 60);
+  };
+
+  function buildCharts(items, counts, team){
+    if (typeof Chart === 'undefined') return;
+    const COLORS = {
+      concluida_prazo: '#10B981',
+      concluida_atraso_leve: '#FBBF24',
+      concluida_atraso: '#F97316',
+      nao_concluida: '#DC2626',
+      cancelada: '#6B7280',
+      pendente: '#CBD5E1'
+    };
+    const STATUS_LABELS = {
+      concluida_prazo: 'No prazo',
+      concluida_atraso_leve: 'Atraso leve',
+      concluida_atraso: 'Atraso',
+      nao_concluida: 'Não concluída',
+      cancelada: 'Cancelada',
+      pendente: 'Pendente'
+    };
+
+    // Pie
+    const pieData = Object.entries(counts).filter(([k,v]) => v > 0);
+    const pieCtx = document.getElementById('cb-chart-pie');
+    if (pieCtx && pieData.length){
+      charts.pie = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: pieData.map(([k]) => STATUS_LABELS[k]),
+          datasets: [{
+            data: pieData.map(([,v]) => v),
+            backgroundColor: pieData.map(([k]) => COLORS[k]),
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } } }
+        }
+      });
+    }
+
+    // Por BU (stacked)
+    const buCtx = document.getElementById('cb-chart-bu');
+    if (buCtx){
+      const buMap = {};
+      items.forEach(it => {
+        const bu = (it.task.bu&&it.task.bu[0]) || 'geral';
+        const st = it.seg.status || 'pendente';
+        buMap[bu] = buMap[bu] || {};
+        buMap[bu][st] = (buMap[bu][st]||0) + 1;
+      });
+      const bus = Object.keys(buMap);
+      const statuses = ['concluida_prazo','concluida_atraso_leve','concluida_atraso','nao_concluida','cancelada','pendente'];
+      charts.bu = new Chart(buCtx, {
+        type: 'bar',
+        data: {
+          labels: bus.map(b => b.toUpperCase()),
+          datasets: statuses.map(st => ({
+            label: STATUS_LABELS[st],
+            data: bus.map(b => buMap[b][st]||0),
+            backgroundColor: COLORS[st]
+          }))
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { x: { stacked: true }, y: { stacked: true, ticks: { precision: 0 } } },
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }
+        }
+      });
+    }
+
+    // Por responsável
+    const pCtx = document.getElementById('cb-chart-person');
+    if (pCtx){
+      const pMap = {};
+      items.forEach(it => {
+        (it.seg.owners||['__none']).forEach(o => {
+          pMap[o] = (pMap[o]||0) + 1;
+        });
+      });
+      const labels = Object.keys(pMap).map(id => {
+        if (id === '__none') return 'Sem responsável';
+        const m = team.find(x => x.id === id);
+        return m ? m.name : id;
+      });
+      const data = Object.values(pMap);
+      charts.person = new Chart(pCtx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Etapas',
+            data,
+            backgroundColor: '#FF6B6B'
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { ticks: { precision: 0 } } }
+        }
+      });
+    }
+
+    // Mensal
+    const mCtx = document.getElementById('cb-chart-monthly');
+    if (mCtx){
+      // Conta concluídas por mês de seg.completed_at OU seg.e (fallback)
+      const monthMap = {};
+      items.forEach(it => {
+        if (!it.seg.status || !it.seg.status.startsWith('concluida')) return;
+        const dStr = it.seg.completed_at || it.seg.e;
+        if (!dStr) return;
+        try {
+          const d = new Date(dStr);
+          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          monthMap[key] = (monthMap[key]||0) + 1;
+        } catch(e){}
+      });
+      const sortedKeys = Object.keys(monthMap).sort();
+      charts.monthly = new Chart(mCtx, {
+        type: 'line',
+        data: {
+          labels: sortedKeys.map(k => {
+            const [y,m] = k.split('-');
+            const dt = new Date(parseInt(y), parseInt(m)-1, 1);
+            return dt.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+          }),
+          datasets: [{
+            label: 'Concluídas',
+            data: sortedKeys.map(k => monthMap[k]),
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16,185,129,.15)',
+            fill: true,
+            tension: .3
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { ticks: { precision: 0 } } }
+        }
+      });
+    }
+  }
+
+  // Hook setView
+  const _origSetView_32 = window.setView;
+  if (typeof _origSetView_32 === 'function'){
+    window.setView = function(v){
+      ensureRelatorioInfra();
+      _origSetView_32.call(this, v);
+      if (v === 'relatorio') try { cbRenderRelatorioPage(); } catch(e){ console.error(e); }
+    };
+  }
+
+  // Boot
+  function boot32(){ ensureRelatorioInfra(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot32);
+  else boot32();
+  setTimeout(boot32, 1500);
 })();
 </script>
 </body>
