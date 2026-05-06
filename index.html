@@ -1549,7 +1549,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   // ── Helpers de sincronização ─────────────────────────────────────────
   let saveTimer = null;
   let pendingSave = false;
-  let suppressSave = false;          // true durante load remoto
+  let suppressSave = true;           // ⚠️ true ATÉ loadRemote completar — evita sobrescrever banco com defaults do JS
+  let initialLoadDone = false;       // false até primeiro loadRemote terminar
   let lastSerialized = '';
   let realtimeChannel = null;
 
@@ -1559,6 +1560,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   function scheduleSave(){
     if (suppressSave) return;
+    if (!initialLoadDone) return;       // ⚠️ guarda extra: nunca salva antes da carga inicial
     const cur = snapshot();
     if (cur === lastSerialized) return;
     pendingSave = true;
@@ -1644,14 +1646,25 @@ document.addEventListener('DOMContentLoaded',()=>{
       // Se a linha existe mas está vazia (primeiro acesso), salva o estado atual
       if (!had){
         suppressSave = false;
+        initialLoadDone = true;
         pendingSave = true;
         await doSave();
       } else {
+        // ⚠️ CRÍTICO: marca que a carga inicial completou.
+        // Só agora destrava saves automáticos (suppressSave = false).
+        // Antes disso, qualquer save automático sobrescreveria os dados do banco
+        // com os defaults hardcoded do JS — bug clássico de race.
+        initialLoadDone = true;
+        suppressSave = false;
+        // lastSerialized já foi setado por applyRemote → snapshot()
         setPill('Sincronizado', 'ok');
       }
     } catch (e) {
       console.error('[CB Sync] Erro ao carregar:', e);
       setPill('Offline — usando dados locais', 'err');
+      // Mesmo offline, libera saves locais (mas vão falhar no servidor)
+      initialLoadDone = true;
+      suppressSave = false;
     }
   }
 
@@ -5183,7 +5196,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div class="cb-login-help">
           <a onclick="cbBypassLogin()">Pular login (modo dev / preview)</a>
           <br><br>
-          Não tem acesso? Fale com a <strong style="color:#0F2037;">Muriel Teixeira</strong>.
+          Não tem acesso? Fale com <strong style="color:#0F2037;">Muriel Teixeira</strong>.
         </div>
       </div>
       <div class="cb-login-footer">
